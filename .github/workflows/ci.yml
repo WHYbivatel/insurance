@@ -37,8 +37,9 @@ jobs:
       - name: Установить Node.js
         uses: actions/setup-node@v4
         with:
-          # Astro 7 требует Node >= 22.23.4, поэтому фиксируем 22.x.
-          node-version: '22'
+          # Astro 7 требует Node >= 22.23.4. На раннере 22.x оказался 22.23.3,
+          # поэтому берём актуальный LTS 24 — он этому требованию удовлетворяет.
+          node-version: '24'
           cache: npm
 
       - name: Установить зависимости
@@ -83,7 +84,7 @@ jobs:
       - name: Установить Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '24'
           cache: npm
 
       - name: Установить зависимости
