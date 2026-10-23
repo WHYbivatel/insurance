@@ -1,22 +1,23 @@
 ---
 import Base from '../layouts/Base.astro';
-import Icon from '../components/Icon.astro';
+import Button from '../components/ui/Button.astro';
+import Link from '../components/ui/Link.astro';
 ---
 
 <Base title="Страница не найдена" description="Страница не найдена. Перейдите в каталог страхования для частных лиц или бизнеса." noindex={true}>
-  <div class="container container--narrow" style="padding-block:64px 80px;text-align:center">
-    <p class="eyebrow" style="justify-content:center">Ошибка 404</p>
-    <h1 style="margin-top:14px">Такой страницы нет</h1>
-    <p class="lead" style="margin:16px auto 26px">
+  <div class="container container--narrow not-found">
+    <p class="eyebrow not-found__eyebrow">Ошибка 404</p>
+    <h1 class="not-found__title">Такой страницы нет</h1>
+    <p class="lead not-found__lead">
       Возможно, адрес изменился или в ссылке опечатка. Каталог доступен в двух разделах —
       для частных лиц и для бизнеса.
     </p>
-    <div class="meta-row" style="justify-content:center">
-      <a class="btn btn--primary btn--lg" href="/dlya-sebya/">Для себя</a>
-      <a class="btn btn--secondary btn--lg" href="/dlya-biznesa/">Для бизнеса</a>
+    <div class="meta-row not-found__actions">
+      <Button href="/dlya-sebya/" size="lg">Для себя</Button>
+      <Button href="/dlya-biznesa/" variant="secondary" size="lg">Для бизнеса</Button>
     </div>
-    <p style="margin-top:26px">
-      <a class="link-arrow" href="/">На главную <Icon name="arrow" size={15} /></a>
+    <p class="not-found__back">
+      <Link href="/" variant="arrow">На главную</Link>
     </p>
   </div>
 </Base>

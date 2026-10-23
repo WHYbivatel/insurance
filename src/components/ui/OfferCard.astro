@@ -1,8 +1,22 @@
 ---
-import Icon from './Icon.astro';
-import CompanyMark from './CompanyMark.astro';
-import { categoryTitle } from '../data/products';
-import { purchaseShort, purchaseLabels, type Offer } from '../data/types';
+/**
+ * OfferCard — карточка предложения.
+ *
+ * Показывает официальный логотип страховщика, обязательность именно этого
+ * продукта (а не категории), способ оформления и цену, если она подтверждена.
+ */
+import Icon from '../Icon.astro';
+import Badge from './Badge.astro';
+import Button from './Button.astro';
+import CompanyLogo from './CompanyLogo.astro';
+import { companyById } from '../../data/companies';
+import { categoryTitle } from '../../data/products';
+import {
+  purchaseShort,
+  purchaseLabels,
+  obligationTone,
+  type Offer,
+} from '../../data/types';
 
 interface Props {
   offer: Offer;
@@ -10,6 +24,9 @@ interface Props {
 }
 
 const { offer, audienceLabel } = Astro.props;
+
+const company = companyById(offer.companyId);
+if (!company) throw new Error(`Неизвестная компания: ${offer.companyId}`);
 
 const priceShort =
   offer.price.kind === 'individual'
@@ -38,8 +55,8 @@ const host = (() => {
 
 <article class="card card--hover offer-card">
   <div class="offer-card__head">
-    <CompanyMark companyId={offer.companyId} />
-    {offer.badge && <span class="chip chip--brand">{offer.badge}</span>}
+    <CompanyLogo company={company} variant="compact" showName={true} />
+    {offer.badge && <Badge tone="brand">{offer.badge}</Badge>}
   </div>
 
   <h3 class="offer-card__title">
@@ -49,6 +66,7 @@ const host = (() => {
 
   <div class="chip-row">
     <span class="chip">{categoryTitle(offer.categoryId)}</span>
+    <Badge tone={obligationTone[offer.obligation.status]}>{offer.obligation.label}</Badge>
     {audienceLabel && <span class="chip chip--outline">{audienceLabel}</span>}
   </div>
 
@@ -64,17 +82,18 @@ const host = (() => {
   </dl>
 
   <div class="offer-card__actions">
-    <a class="btn btn--ghost" href={`/predlozhenie/${offer.slug}/`}>Подробнее</a>
-    <a
-      class="btn btn--primary"
+    <Button href={`/predlozhenie/${offer.slug}/`} variant="ghost">Подробнее</Button>
+    <Button
       href={offer.purchase.url}
-      target="_blank"
-      rel="noopener noreferrer nofollow"
+      variant="primary"
+      external
       aria-label={`${offer.purchase.ctaLabel} — ${host} (откроется в новой вкладке)`}
     >
       {shortCta}
-      <Icon name="external" size={14} />
-    </a>
+      <Icon name="external" size={14} class="icon-external" />
+    </Button>
   </div>
-  <p class="tiny" style="margin-top:-4px">Переход на {host} · {purchaseShort[offer.purchase.method].toLowerCase()}</p>
+  <p class="tiny offer-card__note">
+    Переход на {host} · {purchaseShort[offer.purchase.method].toLowerCase()}
+  </p>
 </article>

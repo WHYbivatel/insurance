@@ -1,6 +1,7 @@
 ---
 import Base from '../layouts/Base.astro';
-import Breadcrumbs from '../components/Breadcrumbs.astro';
+import Breadcrumbs from '../components/ui/Breadcrumbs.astro';
+import EmptyState from '../components/ui/EmptyState.astro';
 import Icon from '../components/Icon.astro';
 import { categories } from '../data/categories';
 import { companies } from '../data/companies';
@@ -31,6 +32,14 @@ const items = [
 ];
 
 const json = JSON.stringify(items).replace(/</g, '\\u003c');
+
+const popular = [
+  { label: 'ОГПО', href: '/poisk/?q=ОГПО' },
+  { label: 'КАСКО', href: '/poisk/?q=КАСКО' },
+  { label: 'Квартира', href: '/poisk/?q=квартира' },
+  { label: 'ДМС', href: '/poisk/?q=ДМС' },
+  { label: 'Грузы', href: '/poisk/?q=груз' },
+];
 ---
 
 <Base
@@ -43,13 +52,13 @@ const json = JSON.stringify(items).replace(/</g, '\\u003c');
 
     <div class="page-head">
       <span class="eyebrow">Поиск</span>
-      <h1 class="page-head__title" style="max-width:none">Найдите страховку, компанию или раздел</h1>
+      <h1 class="page-head__title page-head__title--wide">Найдите страховку, компанию или раздел</h1>
       <p class="page-head__lead">
         Введите запрос — например, «ОГПО», «квартира», «ДМС», «груз» или название компании.
       </p>
     </div>
 
-    <form class="search" action="/poisk/" method="get" role="search" style="margin-bottom:28px">
+    <form class="search search--page" action="/poisk/" method="get" role="search">
       <Icon name="search" size={19} class="search__icon" />
       <label class="sr-only" for="global-search">Поиск по каталогу</label>
       <input
@@ -64,96 +73,46 @@ const json = JSON.stringify(items).replace(/</g, '\\u003c');
       <button class="search__submit" type="submit">Найти</button>
     </form>
 
+    <p class="catalog__count search__counter" data-global-count aria-live="polite" hidden></p>
+
+    <div class="search-hint" data-global-hint>
+      <h2 class="search-hint__title">С чего начать</h2>
+      <p class="small muted">Попробуйте один из частых запросов или откройте раздел каталога.</p>
+      <div class="chip-row">
+        {popular.map((item) => <a class="chip chip--brand" href={item.href}>{item.label}</a>)}
+      </div>
+    </div>
+
     <div data-global-results aria-live="polite"></div>
 
+    <div data-global-empty hidden>
+      <EmptyState
+        title="Ничего не найдено"
+        description="Попробуйте более короткий запрос или выберите раздел каталога вручную."
+        actionLabel="Открыть каталог"
+        href="/dlya-sebya/"
+      />
+    </div>
+
     <noscript>
-      <div class="empty-state">
-        <h3>Для поиска нужен JavaScript</h3>
-        <p>Каталог работает и без него: откройте раздел «Для себя» или «Для бизнеса» и выберите категорию.</p>
-        <a class="btn btn--primary" href="/dlya-sebya/">Перейти в каталог</a>
-      </div>
+      <EmptyState
+        title="Для поиска нужен JavaScript"
+        description="Каталог работает и без него: откройте раздел «Для себя» или «Для бизнеса» и выберите категорию."
+        actionLabel="Перейти в каталог"
+        href="/dlya-sebya/"
+        icon="info"
+      />
     </noscript>
   </div>
+
+  <template data-row-arrow>
+    <Icon name="arrow" size={18} />
+  </template>
 
   <script type="application/json" id="global-index" set:html={json} />
 
   <script>
-    const input = document.querySelector<HTMLInputElement>('[data-global-input]');
-    const results = document.querySelector<HTMLElement>('[data-global-results]');
-    const indexEl = document.querySelector<HTMLScriptElement>('#global-index');
-
-    if (input && results && indexEl) {
-      const items: { title: string; sub: string; url: string; type: string; text: string }[] = JSON.parse(
-        indexEl.textContent || '[]'
-      );
-      const normalize = (value: string) => value.toLowerCase().replace(/ё/g, 'е').trim();
-
-      const render = (query: string) => {
-        const q = normalize(query);
-        results.innerHTML = '';
-
-        if (q.length < 2) {
-          results.innerHTML = `
-            <div class="empty-state" style="text-align:left">
-              <h3 style="margin-bottom:6px">С чего начать</h3>
-              <p style="margin:0 0 14px;max-width:none">Попробуйте один из частых запросов или откройте раздел каталога.</p>
-              <div class="chip-row">
-                <a class="chip chip--brand" href="/poisk/?q=ОГПО">ОГПО</a>
-                <a class="chip chip--brand" href="/poisk/?q=КАСКО">КАСКО</a>
-                <a class="chip chip--brand" href="/poisk/?q=квартира">Квартира</a>
-                <a class="chip chip--brand" href="/poisk/?q=ДМС">ДМС</a>
-                <a class="chip chip--brand" href="/poisk/?q=груз">Грузы</a>
-              </div>
-            </div>`;
-          return;
-        }
-
-        const matches = items.filter((item) => normalize(`${item.title} ${item.sub} ${item.text} ${item.type}`).includes(q));
-
-        if (!matches.length) {
-          results.innerHTML = `
-            <div class="empty-state">
-              <h3>Ничего не найдено</h3>
-              <p>Попробуйте более короткий запрос или выберите раздел каталога вручную.</p>
-              <a class="btn btn--primary" href="/dlya-sebya/">Открыть каталог</a>
-            </div>`;
-          return;
-        }
-
-        const groups = ['Предложение', 'Раздел', 'Компания'];
-        const html = groups
-          .map((group) => {
-            const list = matches.filter((item) => item.type === group);
-            if (!list.length) return '';
-            return `
-              <section style="margin-bottom:26px">
-                <h2 style="font-size:1rem;margin-bottom:10px">${group === 'Предложение' ? 'Предложения' : group === 'Раздел' ? 'Разделы' : 'Компании'} <span class="muted" style="font-weight:600">${list.length}</span></h2>
-                <div class="company-list">
-                  ${list
-                    .slice(0, 40)
-                    .map(
-                      (item) => `<a class="company-row" href="${item.url}">
-                        <span class="company-row__text">
-                          <span class="company-row__name">${item.title}</span>
-                          <span class="company-row__meta">${item.sub}</span>
-                        </span>
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h13"/><path d="M13 7l5 5-5 5"/></svg>
-                      </a>`
-                    )
-                    .join('')}
-                </div>
-              </section>`;
-          })
-          .join('');
-
-        results.innerHTML = `<p class="catalog__count" style="margin-bottom:18px">Найдено <strong>${matches.length}</strong> результатов по запросу «${query.replace(/</g, '&lt;')}»</p>${html}`;
-      };
-
-      const q = new URLSearchParams(location.search).get('q') ?? '';
-      input.value = q;
-      render(q);
-      input.addEventListener('input', () => render(input.value));
-      input.focus({ preventScroll: true });
-    }
+    import { initSearchPage } from '../lib/search-page';
+    initSearchPage();
   </script>
 </Base>

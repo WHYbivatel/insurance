@@ -4,6 +4,10 @@ import { companies } from '../data/companies';
 import { publishedOffers } from '../data/products';
 import { site } from '../data/site';
 
+/**
+ * Карта сайта строится по явному списку страниц.
+ * Служебные адреса (/ui-kit/, /poisk/, /version.json) сюда не входят.
+ */
 export const GET: APIRoute = () => {
   const staticPages = ['/', '/dlya-sebya/', '/dlya-biznesa/', '/kompanii/', '/o-servise/'];
 

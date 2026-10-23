@@ -1,0 +1,27 @@
+---
+/**
+ * Card — базовая поверхность. Паддинг задаётся токенами, а не inline-стилями.
+ */
+interface Props {
+  padding?: 'none' | 'sm' | 'md' | 'lg';
+  hover?: boolean;
+  as?: 'div' | 'article' | 'section' | 'li';
+  class?: string;
+  [key: string]: unknown;
+}
+
+const { padding = 'md', hover = false, as: Tag = 'div', class: className, ...rest } = Astro.props;
+
+const classes = [
+  'card',
+  padding !== 'none' ? `card--pad-${padding}` : '',
+  hover ? 'card--hover' : '',
+  className ?? '',
+]
+  .filter(Boolean)
+  .join(' ');
+---
+
+<Tag class={classes} {...rest}>
+  <slot />
+</Tag>

@@ -1,7 +1,7 @@
 {
   "name": "polis-kz",
   "type": "module",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "description": "Полис — каталог страхования Казахстана",
   "scripts": {
@@ -11,14 +11,18 @@
     "preview": "astro preview",
     "check": "astro check",
     "verify:links": "node scripts/verify-links.mjs",
-    "verify:internal": "node scripts/verify-links.mjs --internal"
+    "verify:internal": "node scripts/verify-links.mjs --internal",
+    "verify:links:soft": "node scripts/verify-links.mjs --soft",
+    "version:info": "node -e \"process.stdout.write(require('node:fs').readFileSync('dist/version.json','utf8'))\""
   },
   "dependencies": {
     "@fontsource-variable/manrope": "^5.2.5",
-    "astro": "^5.14.1"
+    "@lucide/astro": "^1.61.0",
+    "astro": "^7.4.2",
+    "motion": "^14.6.0"
   },
   "devDependencies": {
-    "@astrojs/check": "^0.9.4",
+    "@astrojs/check": "^0.9.12",
     "typescript": "^5.9.2"
   }
 }

@@ -1,0 +1,31 @@
+---
+/**
+ * ToastViewport — контейнер уведомлений.
+ *
+ * Разметка создаётся один раз; сами уведомления добавляет lib/toast.ts
+ * в два live-region: обычные события (polite) и срочные ошибки (assertive).
+ *
+ * Здесь же лежат шаблоны иконок: toast.ts клонирует их, поэтому у уведомлений
+ * ровно те же SVG Lucide, что и во всём интерфейсе, без второй копии путей.
+ */
+import Icon from '../Icon.astro';
+import type { ToastType } from '../../lib/toast';
+
+const types: ToastType[] = ['success', 'info', 'warning', 'error'];
+---
+
+<div class="toast-viewport" data-toast-viewport>
+  <div class="toast-viewport__stack" role="status" aria-live="polite" aria-atomic="false"></div>
+  <div class="toast-viewport__stack" role="alert" aria-live="assertive"></div>
+</div>
+
+<div hidden data-toast-icons>
+  {types.map((type) => (
+    <template data-toast-icon={type}>
+      <Icon name={type} size={16} />
+    </template>
+  ))}
+  <template data-toast-icon="close">
+    <Icon name="close" size={14} />
+  </template>
+</div>

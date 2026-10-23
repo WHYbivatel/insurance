@@ -1,0 +1,51 @@
+---
+/**
+ * Input — текстовое поле с подписью и подсказкой.
+ */
+interface Props {
+  id: string;
+  label?: string;
+  hint?: string;
+  type?: 'text' | 'search' | 'email' | 'tel' | 'url';
+  placeholder?: string;
+  value?: string;
+  name?: string;
+  required?: boolean;
+  invalid?: boolean;
+  class?: string;
+  [key: string]: unknown;
+}
+
+const {
+  id,
+  label,
+  hint,
+  type = 'text',
+  placeholder,
+  value,
+  name,
+  required = false,
+  invalid = false,
+  class: className,
+  ...rest
+} = Astro.props;
+
+const hintId = hint ? `${id}-hint` : undefined;
+---
+
+<div class:list={['field', className]}>
+  {label && <label class="field__label" for={id}>{label}</label>}
+  <input
+    class="input"
+    id={id}
+    type={type}
+    name={name}
+    placeholder={placeholder}
+    value={value}
+    required={required}
+    aria-invalid={invalid ? 'true' : undefined}
+    aria-describedby={hintId}
+    {...rest}
+  />
+  {hint && <p class="field__hint" id={hintId}>{hint}</p>}
+</div>

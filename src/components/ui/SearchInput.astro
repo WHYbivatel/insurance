@@ -1,0 +1,62 @@
+---
+/**
+ * SearchInput — поле поиска с подсказками (combobox).
+ *
+ * Индекс передаётся один раз в JSON-скрипте; клиентский модуль lib/search.ts
+ * строит варианты и управляет клавиатурой, не перенося фокус с поля.
+ */
+import Icon from '../Icon.astro';
+import SearchSuggestions from './SearchSuggestions.astro';
+
+interface Item {
+  title: string;
+  sub: string;
+  url: string;
+  type: string;
+}
+
+interface Props {
+  items: Item[];
+  id?: string;
+  placeholder?: string;
+  action?: string;
+  submitLabel?: string;
+  label?: string;
+  class?: string;
+}
+
+const {
+  items,
+  id = 'site-search',
+  placeholder = 'Введите вид страховки или компанию',
+  action = '/poisk/',
+  submitLabel = 'Найти',
+  label = 'Поиск по видам страхования и компаниям',
+  class: className,
+} = Astro.props;
+
+const json = JSON.stringify(items).replace(/</g, '\\u003c');
+const panelId = `${id}-results`;
+---
+
+<form class:list={['search', className]} action={action} method="get" role="search" data-search>
+  <Icon name="search" size={19} class="search__icon" />
+  <label class="sr-only" for={id}>{label}</label>
+  <input
+    class="search__input"
+    id={id}
+    type="search"
+    name="q"
+    placeholder={placeholder}
+    autocomplete="off"
+    role="combobox"
+    aria-expanded="false"
+    aria-controls={panelId}
+    aria-autocomplete="list"
+    data-search-input
+  />
+  <button class="search__submit" type="submit">{submitLabel}</button>
+  <SearchSuggestions id={panelId} />
+</form>
+
+<script type="application/json" id="search-index" set:html={json} />

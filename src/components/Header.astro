@@ -1,5 +1,11 @@
 ---
-import Icon from './Icon.astro';
+/**
+ * Header — шапка сайта.
+ * Навигация и переключатель аудитории собраны из компонентов UI kit.
+ */
+import AudienceSwitch from './ui/AudienceSwitch.astro';
+import IconButton from './ui/IconButton.astro';
+import MobileMenu from './ui/MobileMenu.astro';
 import type { Audience } from '../data/types';
 
 interface Props {
@@ -24,8 +30,17 @@ const isCurrent = (href: string) => current === href || (href !== '/' && current
     <a class="logo" href="/" aria-label="Полис — на главную">
       <span class="logo__mark">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <path d="M12 2.6l7.4 3.2v5.1c0 4.8-3.1 8.5-7.4 10.5-4.3-2-7.4-5.7-7.4-10.5V5.8L12 2.6z" fill="rgba(255,255,255,0.14)" stroke="#fff" stroke-width="1.5" />
-          <path d="M8.6 12.1l2.3 2.3 4.6-4.6" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+          <path
+            d="M12 2.6l7.4 3.2v5.1c0 4.8-3.1 8.5-7.4 10.5-4.3-2-7.4-5.7-7.4-10.5V5.8L12 2.6z"
+            fill="rgba(255,255,255,0.14)"
+            stroke="#fff"
+            stroke-width="1.5"></path>
+          <path
+            d="M8.6 12.1l2.3 2.3 4.6-4.6"
+            stroke="#fff"
+            stroke-width="1.8"
+            stroke-linecap="round"
+            stroke-linejoin="round"></path>
         </svg>
       </span>
       <span class="logo__text">
@@ -34,49 +49,9 @@ const isCurrent = (href: string) => current === href || (href !== '/' && current
       </span>
     </a>
 
-    <nav class="nav" aria-label="Основная навигация">
-      {links.map((link) => (
-        <a
-          class="nav__link"
-          href={link.href}
-          aria-current={isCurrent(link.href) ? 'page' : undefined}
-          data-nav-audience={link.key || undefined}
-        >
-          {link.label}
-        </a>
-      ))}
-    </nav>
-
-    <div class="header__actions">
-      <div class="audience-switch" role="group" aria-label="Выберите раздел">
-        <a
-          class="audience-switch__item"
-          href="/dlya-sebya/"
-          aria-current={audience === 'individual' ? 'true' : undefined}
-          data-audience-link="individual"
-        >
-          Для себя
-        </a>
-        <a
-          class="audience-switch__item"
-          href="/dlya-biznesa/"
-          aria-current={audience === 'business' ? 'true' : undefined}
-          data-audience-link="business"
-        >
-          Для бизнеса
-        </a>
-      </div>
-      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="mobile-menu" data-menu-toggle>
-        <Icon name="menu" size={22} />
-        <span class="sr-only">Открыть меню</span>
-      </button>
-    </div>
-  </div>
-
-  <div class="mobile-menu" id="mobile-menu" data-open="false">
-    <div class="container">
-      <nav class="nav" aria-label="Мобильная навигация">
-        {links.map((link) => (
+    <nav class="nav nav--desktop" aria-label="Основная навигация">
+      {
+        links.map((link) => (
           <a
             class="nav__link"
             href={link.href}
@@ -85,12 +60,22 @@ const isCurrent = (href: string) => current === href || (href !== '/' && current
           >
             {link.label}
           </a>
-        ))}
-      </nav>
-      <div class="audience-switch" role="group" aria-label="Выберите раздел">
-        <a class="audience-switch__item" href="/dlya-sebya/" data-audience-link="individual">Для себя</a>
-        <a class="audience-switch__item" href="/dlya-biznesa/" data-audience-link="business">Для бизнеса</a>
-      </div>
+        ))
+      }
+    </nav>
+
+    <div class="header__actions">
+      <AudienceSwitch audience={audience} class="header__switch" />
+      <IconButton
+        icon="menu"
+        label="Открыть меню"
+        class="menu-toggle"
+        data-menu-toggle
+        aria-expanded="false"
+        aria-controls="mobile-menu"
+      />
     </div>
   </div>
+
+  <MobileMenu links={links} current={current} audience={audience} />
 </header>

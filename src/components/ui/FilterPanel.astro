@@ -1,0 +1,92 @@
+---
+/**
+ * FilterPanel — фильтры каталога: компания, способ оформления, обязательность.
+ * На мобильных раскрывается кнопкой (см. CatalogBrowser).
+ */
+import Checkbox from './Checkbox.astro';
+import { companies } from '../../data/companies';
+import {
+  purchaseLabels,
+  obligationLabels,
+  type Offer,
+  type PurchaseMethod,
+  type ObligationStatus,
+} from '../../data/types';
+
+interface Props {
+  offers: Offer[];
+}
+
+const { offers } = Astro.props;
+
+const usedCompanies = companies.filter((company) => offers.some((o) => o.companyId === company.id));
+
+const methods = Array.from(new Set(offers.map((o) => o.purchase.method))) as PurchaseMethod[];
+
+const obligations = Array.from(
+  new Set(offers.map((o) => o.obligation.status))
+) as ObligationStatus[];
+
+const countByCompany = (id: string) => offers.filter((o) => o.companyId === id).length;
+const countByMethod = (method: PurchaseMethod) =>
+  offers.filter((o) => o.purchase.method === method).length;
+const countByObligation = (status: ObligationStatus) =>
+  offers.filter((o) => o.obligation.status === status).length;
+
+const obligationOrder: ObligationStatus[] = ['required', 'conditional', 'voluntary'];
+---
+
+<aside class="filters" id="catalog-filters" data-filters aria-label="Фильтры каталога">
+  <div class="filters__head">
+    <span class="filters__title">Фильтры</span>
+    <button class="filters__reset" type="button" data-reset>Сбросить</button>
+  </div>
+
+  <div class="filters__group">
+    <p class="filters__label" id="filter-company">Компания</p>
+    <div role="group" aria-labelledby="filter-company">
+      {usedCompanies.map((company) => (
+        <Checkbox
+          name="company"
+          value={company.id}
+          label={company.name}
+          count={countByCompany(company.id)}
+          filter="company"
+          company={company}
+        />
+      ))}
+    </div>
+  </div>
+
+  <div class="filters__group">
+    <p class="filters__label" id="filter-method">Способ оформления</p>
+    <div role="group" aria-labelledby="filter-method">
+      {methods.map((method) => (
+        <Checkbox
+          name="method"
+          value={method}
+          label={purchaseLabels[method]}
+          count={countByMethod(method)}
+          filter="method"
+        />
+      ))}
+    </div>
+  </div>
+
+  <div class="filters__group">
+    <p class="filters__label" id="filter-obligation">Обязательность</p>
+    <div role="group" aria-labelledby="filter-obligation">
+      {obligationOrder
+        .filter((status) => obligations.includes(status))
+        .map((status) => (
+          <Checkbox
+            name="obligation"
+            value={status}
+            label={obligationLabels[status]}
+            count={countByObligation(status)}
+            filter="obligation"
+          />
+        ))}
+    </div>
+  </div>
+</aside>

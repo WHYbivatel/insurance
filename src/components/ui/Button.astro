@@ -1,0 +1,82 @@
+---
+/**
+ * Button — основная кнопка или ссылка-кнопка.
+ *
+ * Варианты: primary | secondary | ghost | subtle | danger
+ * Размеры: sm | md | lg
+ * Если задан href — рендерится <a>, внешние адреса получают safe-атрибуты.
+ */
+import Icon from '../Icon.astro';
+import type { IconName } from '../../lib/icons';
+
+interface Props {
+  href?: string;
+  variant?: 'primary' | 'secondary' | 'ghost' | 'subtle' | 'danger';
+  size?: 'sm' | 'md' | 'lg';
+  block?: boolean;
+  external?: boolean;
+  icon?: IconName;
+  iconRight?: IconName;
+  type?: 'button' | 'submit' | 'reset';
+  disabled?: boolean;
+  class?: string;
+  /** Дополнительные атрибуты (data-*, aria-*, download и т. п.). */
+  [key: string]: unknown;
+}
+
+const {
+  href,
+  variant = 'primary',
+  size = 'md',
+  block = false,
+  external = false,
+  icon,
+  iconRight,
+  type = 'button',
+  disabled = false,
+  class: className,
+  ...rest
+} = Astro.props;
+
+const classes = [
+  'btn',
+  `btn--${variant}`,
+  size !== 'md' ? `btn--${size}` : '',
+  block ? 'btn--block' : '',
+  className ?? '',
+]
+  .filter(Boolean)
+  .join(' ');
+
+const externalAttrs = external
+  ? { target: '_blank', rel: 'noopener noreferrer nofollow' }
+  : {};
+---
+
+{
+  href ? (
+    <a class={classes} href={href} {...externalAttrs} {...rest}>
+      {icon && <Icon name={icon} size={size === 'sm' ? 16 : 18} />}
+      <slot />
+      {iconRight && (
+        <Icon
+          name={iconRight}
+          size={size === 'sm' ? 14 : 16}
+          class={iconRight === 'external' ? 'icon-external' : undefined}
+        />
+      )}
+    </a>
+  ) : (
+    <button class={classes} type={type} disabled={disabled} {...rest}>
+      {icon && <Icon name={icon} size={size === 'sm' ? 16 : 18} />}
+      <slot />
+      {iconRight && (
+        <Icon
+          name={iconRight}
+          size={size === 'sm' ? 14 : 16}
+          class={iconRight === 'external' ? 'icon-external' : undefined}
+        />
+      )}
+    </button>
+  )
+}

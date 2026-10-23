@@ -1,4 +1,12 @@
 import type { Company } from './types';
+import nomadMark from '../assets/logos/nomad-mark.png';
+import eurasiaMark from '../assets/logos/eurasia-mark.png';
+import eurasiaLockup from '../assets/logos/eurasia-lockup.png';
+import amanatLockup from '../assets/logos/amanat-lockup.svg';
+import centrasMark from '../assets/logos/centras-mark.png';
+import freedomMark from '../assets/logos/freedom-mark.svg';
+import halykMark from '../assets/logos/halyk-mark.svg';
+import halykLockup from '../assets/logos/halyk-lockup.png';
 
 /**
  * Компании каталога.
@@ -22,6 +30,14 @@ export const companies: Company[] = [
       'БИН 040140001147 указан на сайте компании',
     ],
     note: 'Онлайн-оформление ОГПО и части имущественных продуктов требует авторизации в личном кабинете и подтверждения через SMS.',
+    logo: {
+      mark: nomadMark.src,
+      markWidth: nomadMark.width,
+      markHeight: nomadMark.height,
+      sourceUrl: 'https://nomad.kz/build/assets/Logo_v1-DnyaSbSv.png',
+      fetchedAt: '2026-10-23',
+      note: 'Квадратный знак Nomad Insurance с сайта компании (101×100). Логотип контакт-центра «1414» с того же сайта не используется: это не логотип страховщика.',
+    },
     accent: '#0E5A3C',
   },
   {
@@ -41,6 +57,16 @@ export const companies: Company[] = [
       'Отдельные линейки для частных лиц и корпоративных клиентов',
     ],
     note: 'Онлайн-оформление ОГПО доступно на eurasia36.kz; часть добровольных продуктов оформляется через менеджера.',
+    logo: {
+      mark: eurasiaMark.src,
+      markWidth: eurasiaMark.width,
+      markHeight: eurasiaMark.height,
+      lockup: eurasiaLockup.src,
+      lockupWidth: eurasiaLockup.width,
+      lockupHeight: eurasiaLockup.height,
+      sourceUrl: 'https://theeurasia.kz/bitrix/templates/eurasia_ru/images/Eurasia_kaz_rus2.png',
+      fetchedAt: '2026-10-23',
+    },
     accent: '#1D4E89',
   },
   {
@@ -59,6 +85,19 @@ export const companies: Company[] = [
       'Личный кабинет и онлайн-урегулирование',
       'Круглосуточный колл-центр по данным сайта',
     ],
+    logo: {
+      /* На сайте страховщика есть только словесный логотип: квадратной марки нет.
+         Используем официальный файл как есть, без рисунка «по мотивам». */
+      mark: amanatLockup.src,
+      markWidth: amanatLockup.width,
+      markHeight: amanatLockup.height,
+      lockup: amanatLockup.src,
+      lockupWidth: amanatLockup.width,
+      lockupHeight: amanatLockup.height,
+      sourceUrl: 'https://amanat24.kz/_nuxt/img/logo.2b6daef.svg',
+      fetchedAt: '2026-10-23',
+      note: 'Официальный файл — словесный логотип 99×30, отдельной квадратной марки на сайте нет. Поэтому логотип показывается в широком контейнере с сохранением пропорций.',
+    },
     accent: '#8A5A2B',
   },
   {
@@ -78,6 +117,13 @@ export const companies: Company[] = [
       'ОГПО ВТС оформляется на партнёрском сайте kupipolis.kz',
     ],
     note: 'Публичные страницы продуктов содержат описание условий, но не всегда — полный тариф. Стоимость рассчитывается индивидуально.',
+    logo: {
+      mark: centrasMark.src,
+      markWidth: centrasMark.width,
+      markHeight: centrasMark.height,
+      sourceUrl: 'https://cic.kz/logo.png',
+      fetchedAt: '2026-10-23',
+    },
     accent: '#3E4A59',
   },
   {
@@ -97,6 +143,14 @@ export const companies: Company[] = [
       'Национальный рейтинг kzA- указан на сайте компании',
     ],
     note: 'Часть продуктов оформляется онлайн, корпоративные — по заявке через менеджера.',
+    logo: {
+      mark: freedomMark.src,
+      markWidth: freedomMark.width,
+      markHeight: freedomMark.height,
+      sourceUrl: 'https://ffins.kz/main-front/images/Freedom-logo.svg',
+      fetchedAt: '2026-10-23',
+      note: 'Знак выделен из официального SVG: словесная часть логотипа набрана белым и на светлом фоне не читается.',
+    },
     accent: '#0B6E4F',
   },
   {
@@ -116,6 +170,17 @@ export const companies: Company[] = [
       'Онлайн-оформление обязательного страхования работников',
     ],
     note: 'Накопительные программы — долгосрочные договоры; условия и доходность фиксируются в договоре.',
+    logo: {
+      mark: halykMark.src,
+      markWidth: halykMark.width,
+      markHeight: halykMark.height,
+      lockup: halykLockup.src,
+      lockupWidth: halykLockup.width,
+      lockupHeight: halykLockup.height,
+      sourceUrl: 'https://halyklife.kz/favicon.svg',
+      fetchedAt: '2026-10-23',
+      note: 'Логотип именно Halyk Life, не Halyk Bank.',
+    },
     accent: '#1F6B45',
   },
 ];

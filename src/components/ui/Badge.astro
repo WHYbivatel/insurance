@@ -1,0 +1,31 @@
+---
+/**
+ * Badge — короткая метка: обязательность, способ оформления, статус.
+ * Тон задаёт смысл; иконка дублирует цвет, чтобы состояние читалось без цвета.
+ */
+import Icon from '../Icon.astro';
+import type { IconName } from '../../lib/icons';
+
+interface Props {
+  tone?: 'neutral' | 'brand' | 'success' | 'info' | 'warning' | 'danger';
+  size?: 'md' | 'lg';
+  icon?: IconName;
+  class?: string;
+}
+
+const { tone = 'neutral', size = 'md', icon, class: className } = Astro.props;
+
+const classes = [
+  'badge',
+  `badge--${tone}`,
+  size === 'lg' ? 'badge--lg' : '',
+  className ?? '',
+]
+  .filter(Boolean)
+  .join(' ');
+---
+
+<span class={classes}>
+  {icon && <Icon name={icon} size={13} />}
+  <slot />
+</span>

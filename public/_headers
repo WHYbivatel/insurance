@@ -1,0 +1,41 @@
+# Правила кеширования для статического хостинга.
+#
+# Формат понимают Netlify, Cloudflare Pages, Deno Deploy и совместимые хосты.
+# GitHub Pages этот файл игнорирует: там заголовки задать нельзя, поэтому для
+# GitHub Pages используются хешированные имена файлов и no-cache на HTML
+# (см. README, раздел «Кеширование и обновления»).
+#
+# Логика:
+#   * файлы в /_astro/ содержат хеш в имени → их можно кешировать навсегда;
+#   * HTML не кешируется, чтобы новая сборка была видна сразу;
+#   * /version.json — всегда свежий, иначе вкладка не увидит обновление;
+#   * остальные файлы (robots.txt, sitemap.xml, favicon, og.svg) перепроверяются.
+
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  X-Frame-Options: SAMEORIGIN
+
+/_astro/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/*.html
+  Cache-Control: no-cache
+
+/
+  Cache-Control: no-cache
+
+/version.json
+  Cache-Control: no-store
+
+/robots.txt
+  Cache-Control: public, max-age=3600
+
+/sitemap.xml
+  Cache-Control: public, max-age=3600
+
+/favicon.svg
+  Cache-Control: public, max-age=86400
+
+/og.svg
+  Cache-Control: public, max-age=86400

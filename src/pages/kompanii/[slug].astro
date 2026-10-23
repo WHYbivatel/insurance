@@ -1,6 +1,9 @@
 ---
 import Base from '../../layouts/Base.astro';
-import Breadcrumbs from '../../components/Breadcrumbs.astro';
+import Breadcrumbs from '../../components/ui/Breadcrumbs.astro';
+import Button from '../../components/ui/Button.astro';
+import CompanyLogo from '../../components/ui/CompanyLogo.astro';
+import EmptyState from '../../components/ui/EmptyState.astro';
 import Icon from '../../components/Icon.astro';
 import { companies } from '../../data/companies';
 import { offersByCompany, categoryTitle } from '../../data/products';
@@ -15,6 +18,11 @@ const offers = offersByCompany(company.id);
 const individual = offers.filter((o) => o.audience === 'individual');
 const business = offers.filter((o) => o.audience === 'business');
 const host = new URL(company.site).host.replace(/^www\./, '');
+const logoDate = new Date(company.logo.fetchedAt).toLocaleDateString('ru-RU', {
+  day: 'numeric',
+  month: 'long',
+  year: 'numeric',
+});
 ---
 
 <Base
@@ -31,23 +39,25 @@ const host = new URL(company.site).host.replace(/^www\./, '');
     />
 
     <header class="company-head">
-      <span class="company-head__mono" style={`background:${company.accent}`} aria-hidden="true">
-        {company.name.charAt(0)}
-      </span>
-      <div style="flex:1">
+      <CompanyLogo company={company} variant="large" eager />
+      <div class="company-head__body">
         <span class="eyebrow">Страховщик</span>
-        <h1 style="margin-top:6px;font-size:clamp(1.8rem,3vw,2.5rem)">{company.name}</h1>
+        <h1 class="company-head__title">{company.name}</h1>
         <p class="small muted" style="margin-top:6px">{company.legalName} · {company.city}</p>
         <p class="page-head__lead" style="margin-top:12px;font-size:0.96rem">{company.summary}</p>
         <div class="meta-row" style="margin-top:14px">
-          <a class="btn btn--secondary" href={company.site} target="_blank" rel="noopener noreferrer nofollow">
+          <Button href={company.site} variant="secondary" external iconRight="external">
             Официальный сайт: {host}
-            <Icon name="external" size={14} />
-          </a>
+          </Button>
           <span class="chip">{offers.length} предложений в каталоге</span>
         </div>
       </div>
     </header>
+
+    <p class="tiny company-head__logo-note">
+      Логотип получен с официального сайта страховщика {logoDate}.
+      {company.logo.note}
+    </p>
 
     <div class="grid grid--2" style="margin-top:26px">
       <section class="info-block">
@@ -84,21 +94,24 @@ const host = new URL(company.site).host.replace(/^www\./, '');
       </div>
 
       {offers.length === 0 && (
-        <div class="empty-state">
-          <h3>Пока нет проверенных предложений</h3>
-          <p>Мы не добавляем продукты без подтверждения на официальном сайте.</p>
-        </div>
+        <EmptyState
+          title="Пока нет проверенных предложений"
+          description="Мы не добавляем продукты без подтверждения на официальном сайте."
+          icon="info"
+        />
       )}
 
       {individual.length > 0 && (
         <div style="margin-bottom:28px">
-          <h3 style="font-size:1rem;margin-bottom:12px">Для себя <span class="muted" style="font-weight:600">{individual.length}</span></h3>
+          <h3 class="company-group__title">Для себя <span class="muted">{individual.length}</span></h3>
           <div class="company-list">
             {individual.map((offer) => (
               <a class="company-row" href={`/predlozhenie/${offer.slug}/`}>
                 <span class="company-row__text">
                   <span class="company-row__name">{offer.title}</span>
-                  <span class="company-row__meta">{categoryTitle(offer.categoryId)} · {purchaseShort[offer.purchase.method]} · {offer.price.text}</span>
+                  <span class="company-row__meta">
+                    {categoryTitle(offer.categoryId)} · {purchaseShort[offer.purchase.method]} · {offer.price.text}
+                  </span>
                 </span>
                 <Icon name="arrow" size={18} />
               </a>
@@ -109,13 +122,15 @@ const host = new URL(company.site).host.replace(/^www\./, '');
 
       {business.length > 0 && (
         <div>
-          <h3 style="font-size:1rem;margin-bottom:12px">Для бизнеса <span class="muted" style="font-weight:600">{business.length}</span></h3>
+          <h3 class="company-group__title">Для бизнеса <span class="muted">{business.length}</span></h3>
           <div class="company-list">
             {business.map((offer) => (
               <a class="company-row" href={`/predlozhenie/${offer.slug}/`}>
                 <span class="company-row__text">
                   <span class="company-row__name">{offer.title}</span>
-                  <span class="company-row__meta">{categoryTitle(offer.categoryId)} · {purchaseShort[offer.purchase.method]} · {offer.price.text}</span>
+                  <span class="company-row__meta">
+                    {categoryTitle(offer.categoryId)} · {purchaseShort[offer.purchase.method]} · {offer.price.text}
+                  </span>
                 </span>
                 <Icon name="arrow" size={18} />
               </a>

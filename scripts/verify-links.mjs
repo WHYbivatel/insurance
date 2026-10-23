@@ -39,6 +39,9 @@ const USER_AGENT =
 
 const showAll = process.argv.includes('--all');
 const checkInternal = process.argv.includes('--internal');
+/* Мягкий режим для CI: сетевые сбои не ломают сборку, но подтверждённые
+   ошибки (404/410) всё равно видны в отчёте и помечаются отдельно. */
+const soft = process.argv.includes('--soft');
 
 /** Вытаскиваем все `url: '...'` из файлов данных. */
 async function collectUrls() {
@@ -88,7 +91,8 @@ async function probe(url) {
     }
   } catch (error) {
     const reason = error?.name === 'TimeoutError' ? 'таймаут' : error?.message ?? 'ошибка сети';
-    return { url, ok: false, kind: 'fail', status: 0, note: reason };
+    // Это не подтверждённая битая ссылка: сайт мог быть недоступен временно.
+    return { url, ok: false, kind: 'unavailable', status: 0, note: reason };
   }
 
   const status = response.status;
@@ -103,7 +107,14 @@ async function probe(url) {
   if ([401, 403, 429, 503].includes(status)) {
     return { url, ok: true, kind: 'blocked', status, note: 'закрыто для автоматической проверки' };
   }
-  return { url, ok: false, kind: 'fail', status, note: 'страница не отвечает нужным кодом' };
+  const confirmed = status === 404 || status === 410;
+  return {
+    url,
+    ok: false,
+    kind: confirmed ? 'broken' : 'unavailable',
+    status,
+    note: confirmed ? 'страница не найдена — ссылка могла переехать' : 'сайт ответил ошибкой',
+  };
 }
 
 async function runPool(items, worker, limit) {
@@ -228,7 +239,8 @@ if (checkInternal) {
 
   const ok = results.filter((r) => r.kind === 'ok');
   const blocked = results.filter((r) => r.kind === 'blocked');
-  const failed = results.filter((r) => r.kind === 'fail');
+  const unavailable = results.filter((r) => r.kind === 'unavailable');
+  const broken = results.filter((r) => r.kind === 'broken');
 
   if (showAll) {
     for (const item of ok) {
@@ -245,27 +257,38 @@ if (checkInternal) {
     console.log('');
   }
 
-  if (failed.length) {
-    console.log('Проблемные адреса:');
-    for (const item of failed) {
+  if (broken.length) {
+    console.log('Подтверждённые битые ссылки (404/410):');
+    for (const item of broken) {
+      console.log(`  ${item.status}  ${item.url}`);
+      console.log(`        ${item.files.join(', ')}`);
+    }
+    console.log('');
+  }
+
+  if (unavailable.length) {
+    console.log('Проверка недоступна (сеть, таймаут или ошибка на стороне сайта):');
+    for (const item of unavailable) {
       const status = item.status ? String(item.status) : '—';
-      console.log(`  ${status}  ${item.url}`);
-      console.log(`        ${item.note} · ${item.files.join(', ')}`);
+      console.log(`  ${status}  ${item.url}  ${item.note}`);
     }
     console.log('');
   }
 
   console.log(
-    `Итого: ${ok.length} в порядке, ${blocked.length} закрыто для проверки, ${failed.length} с ошибкой.`
+    `Итого: ${ok.length} в порядке, ${blocked.length} закрыто для проверки, ` +
+      `${unavailable.length} недоступно, ${broken.length} подтверждённо битых.`
   );
 
-  if (failed.length > 0) {
+  if (broken.length > 0) {
     console.log(
-      '\nПроверьте проблемные адреса вручную: возможно, страница переехала — тогда обновите ' +
+      '\nПроверьте эти адреса вручную: возможно, страница переехала — тогда обновите ' +
         'source.url и purchase.url в src/data/products.*.ts и дату checkedAt.'
     );
-    process.exit(1);
   }
 
-  console.log('Битых внешних ссылок не найдено.');
+  if (broken.length > 0 && !soft) process.exit(1);
+  if (broken.length === 0 && unavailable.length === 0) {
+    console.log('Битых внешних ссылок не найдено.');
+  }
 }

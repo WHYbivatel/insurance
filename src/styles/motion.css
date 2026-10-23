@@ -1,0 +1,193 @@
+/* ==========================================================================
+   Слой анимаций
+   --------------------------------------------------------------------------
+   Все появления и переходы собраны здесь. Классы ставятся компонентом Reveal
+   и общими обработчиками; без JavaScript разметка остаётся видимой, потому что
+   начальное состояние включается только при наличии класса .js на <html>.
+   ========================================================================== */
+
+/* ---------- Появление ---------- */
+.js .reveal {
+  opacity: 0;
+  transform: translateY(var(--reveal-shift));
+  transition: opacity var(--dur-reveal) var(--ease-out-soft),
+    transform var(--dur-reveal) var(--ease-out-soft);
+  transition-delay: var(--reveal-delay, 0ms);
+  will-change: opacity, transform;
+}
+
+.js .reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* После появления убираем will-change, чтобы не держать слои. */
+.js .reveal.is-done {
+  will-change: auto;
+}
+
+/* ---------- Карточки: мягкий подъём при наведении ---------- */
+@media (hover: hover) and (pointer: fine) {
+  .card,
+  .offer-card,
+  .cat-card,
+  .company-card {
+    transition: transform var(--dur-base) var(--ease-inout),
+      box-shadow var(--dur-base) var(--ease-inout),
+      border-color var(--dur-base) var(--ease-inout);
+  }
+
+  .card:hover,
+  .offer-card:hover,
+  .cat-card:hover,
+  .company-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-hover);
+    border-color: var(--line-strong);
+  }
+}
+
+/* ---------- Появление результатов фильтрации ---------- */
+@keyframes card-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.results__item.is-entering {
+  animation: card-in 160ms var(--ease-out-soft) both;
+}
+
+/* ---------- Подсказки поиска ---------- */
+@keyframes suggestions-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.search-results[data-open='true'] {
+  animation: suggestions-in var(--dur-fast) var(--ease-out-soft) both;
+}
+
+/* ---------- Мобильное меню ---------- */
+@keyframes menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.mobile-menu[data-open='true'] {
+  animation: menu-in var(--dur-slow) var(--ease-out-soft) both;
+}
+
+/* ---------- Первый экран ---------- */
+.js .hero-stagger > * {
+  opacity: 0;
+  transform: translateY(var(--reveal-shift));
+  transition: opacity var(--dur-reveal) var(--ease-out-soft),
+    transform var(--dur-reveal) var(--ease-out-soft);
+}
+
+.js .hero-stagger.is-visible > * {
+  opacity: 1;
+  transform: none;
+}
+
+.js .hero-stagger.is-visible > *:nth-child(1) {
+  transition-delay: 0ms;
+}
+.js .hero-stagger.is-visible > *:nth-child(2) {
+  transition-delay: var(--stagger);
+}
+.js .hero-stagger.is-visible > *:nth-child(3) {
+  transition-delay: calc(var(--stagger) * 2);
+}
+.js .hero-stagger.is-visible > *:nth-child(4) {
+  transition-delay: calc(var(--stagger) * 3);
+}
+.js .hero-stagger.is-visible > *:nth-child(5) {
+  transition-delay: calc(var(--stagger) * 4);
+}
+.js .hero-stagger.is-visible > *:nth-child(6) {
+  transition-delay: calc(var(--stagger) * 5);
+}
+.js .hero-stagger.is-visible > *:nth-child(7) {
+  transition-delay: calc(var(--stagger) * 6);
+}
+
+/* ---------- Уведомления ----------
+   Появление и исчезновение анимирует Motion (lib/toast.ts): он же сообщает,
+   когда можно удалить элемент. Здесь остаётся только полоска оставшегося
+   времени — она на CSS, чтобы пауза совпадала с таймером. */
+@keyframes toast-progress {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+
+/* ---------- Уменьшение движения ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .js .reveal,
+  .js .hero-stagger > * {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .js .reveal {
+    opacity: 0;
+    transition: opacity var(--dur-instant) linear;
+  }
+
+  .js .reveal.is-visible {
+    opacity: 1;
+  }
+
+  .js .hero-stagger > * {
+    opacity: 1;
+    transform: none;
+  }
+
+  .results__item.is-entering,
+  .search-results[data-open='true'],
+  .mobile-menu[data-open='true'] {
+    animation: none;
+  }
+
+  /* Полоска времени остаётся: она показывает, сколько уведомление ещё провисит. */
+  .toast__progress {
+    animation: none;
+    opacity: 0;
+  }
+
+  .card:hover,
+  .offer-card:hover,
+  .cat-card:hover,
+  .company-card:hover,
+  .btn:hover {
+    transform: none;
+  }
+
+  .accordion__panel,
+  .audience-switch__thumb {
+    transition: none;
+  }
+}

@@ -1,0 +1,56 @@
+---
+/**
+ * CategoryCard — карточка раздела каталога.
+ *
+ * Обязательность показывается только если она одинакова у всех предложений
+ * раздела. Если внутри есть и обязательные, и добровольные продукты,
+ * карточка честно пишет об этом, а не навешивает один статус на весь раздел.
+ */
+import Icon from '../Icon.astro';
+import type { Category, ObligationStatus } from '../../data/types';
+
+interface Props {
+  category: Category;
+  count: number;
+  statuses: ObligationStatus[];
+  href: string;
+}
+
+const { category, count, statuses, href } = Astro.props;
+
+const plural = (n: number): string => {
+  const mod10 = n % 10;
+  const mod100 = n % 100;
+  if (mod10 === 1 && mod100 !== 11) return 'предложение';
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return 'предложения';
+  return 'предложений';
+};
+
+const short: Record<ObligationStatus, string> = {
+  required: 'Обязательно',
+  voluntary: 'Добровольно',
+  conditional: 'При условиях',
+};
+
+const unique = Array.from(new Set(statuses));
+const label =
+  unique.length === 0
+    ? 'Объяснение'
+    : unique.length === 1
+      ? short[unique[0]]
+      : 'Обязательные и добровольные';
+
+const countLabel = count > 0 ? `${count} ${plural(count)}` : 'Пока без предложений';
+---
+
+<a class="cat-card" href={href}>
+  <span class={`cat-card__icon tint-${category.tint}`}>
+    <Icon name={category.icon} size={20} />
+  </span>
+  <span class="cat-card__title">{category.navTitle}</span>
+  <span class="cat-card__text">{category.short}</span>
+  <span class="cat-card__meta">
+    <span>{label}</span>
+    <strong>{countLabel}</strong>
+  </span>
+</a>

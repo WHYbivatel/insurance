@@ -1,0 +1,31 @@
+---
+/**
+ * VersionIndicator — компактная версия в подвале.
+ * Показывает только номер версии; технические подробности — в /version.json.
+ * При появлении новой сборки превращается в кнопку «Обновить».
+ */
+import { buildInfo } from '../../lib/build-info';
+
+interface Props {
+  class?: string;
+}
+
+const { class: className } = Astro.props;
+---
+
+<span
+  class:list={['version-indicator', className]}
+  data-version-indicator
+  data-build-id={buildInfo.buildId}
+>
+  <span class="version-indicator__dot" aria-hidden="true"></span>
+  <span data-version-label>v{buildInfo.version}</span>
+  <button
+    class="version-indicator__button"
+    type="button"
+    data-version-reload
+    hidden
+  >
+    Обновить
+  </button>
+</span>

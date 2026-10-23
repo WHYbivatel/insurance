@@ -1,0 +1,87 @@
+---
+/**
+ * CompanyLogo — официальный логотип страховщика.
+ *
+ * variant:
+ *   compact — 32px, для фильтров и плотных списков
+ *   default — 44px, для карточек предложений
+ *   large   — 72px, для шапки страницы компании
+ *   wide    — официальный полный логотип, если файл есть
+ *   lockup  — знак + читаемое название рядом
+ *
+ * Пропорции сохраняются (object-fit: contain), фон и внутренние отступы
+ * заданы токенами. Если видимое название выводится рядом, изображение
+ * помечается декоративным, чтобы скринридер не читал его дважды.
+ */
+import type { Company } from '../../data/types';
+
+interface Props {
+  company: Company;
+  variant?: 'compact' | 'default' | 'large' | 'wide' | 'lockup';
+  /** Показывать название рядом со знаком. */
+  showName?: boolean;
+  /** Загружать сразу (для первого экрана). */
+  eager?: boolean;
+  class?: string;
+}
+
+const { company, variant = 'default', showName, eager = false, class: className } = Astro.props;
+
+const { logo } = company;
+const sizeClass =
+  variant === 'compact'
+    ? 'company-logo--sm'
+    : variant === 'large'
+      ? 'company-logo--lg'
+      : 'company-logo--md';
+
+const useWide = variant === 'wide' && Boolean(logo.lockup);
+const src = useWide ? logo.lockup! : logo.mark;
+const width = useWide ? logo.lockupWidth : logo.markWidth;
+const height = useWide ? logo.lockupHeight : logo.markHeight;
+
+// Название выводим рядом, если это lockup-вариант или явно попросили.
+const withName = showName ?? variant === 'lockup';
+
+// Если рядом есть текст, картинка декоративная.
+const alt = withName ? '' : company.name;
+const loading = eager ? 'eager' : 'lazy';
+
+/* Горизонтальный логотип (по сути словесный знак) нельзя сжимать в квадрат:
+   для него контейнер шире, пропорции сохраняются. */
+const isWide = Boolean(width && height && width / height > 1.9);
+const shape = isWide ? 'wide' : 'square';
+---
+
+{
+  withName ? (
+    <span class:list={['company-lockup', className]}>
+      <span class:list={['company-logo', sizeClass]} data-shape={shape}>
+        <img
+          src={src}
+          width={width}
+          height={height}
+          alt=""
+          aria-hidden="true"
+          loading={loading}
+          decoding="async"
+        />
+      </span>
+      <span class="company-lockup__name">{company.name}</span>
+    </span>
+  ) : (
+    <span
+      class:list={['company-logo', useWide ? 'company-logo--wide' : sizeClass, className]}
+      data-shape={shape}
+    >
+      <img
+        src={src}
+        width={width}
+        height={height}
+        alt={alt}
+        loading={loading}
+        decoding="async"
+      />
+    </span>
+  )
+}

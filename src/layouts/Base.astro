@@ -2,7 +2,9 @@
 import '../styles/global.css';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
+import ToastViewport from '../components/ui/ToastViewport.astro';
 import { site } from '../data/site';
+import { buildInfo } from '../lib/build-info';
 import type { Audience } from '../data/types';
 
 interface Props {
@@ -32,6 +34,10 @@ const schemas = schema ? (Array.isArray(schema) ? schema : [schema]) : [];
     <meta name="format-detection" content="telephone=no" />
     {noindex && <meta name="robots" content="noindex, follow" />}
 
+    <!-- Идентификатор сборки этой страницы: с ним сравнивается /version.json -->
+    <meta name="build-id" content={buildInfo.buildId} />
+    <meta name="app-version" content={buildInfo.version} />
+
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content={site.name} />
     <meta property="og:locale" content={site.locale} />
@@ -48,6 +54,15 @@ const schemas = schema ? (Array.isArray(schema) ? schema : [schema]) : [];
     <link rel="sitemap" href="/sitemap.xml" />
 
     {schemas.map((item) => <script type="application/ld+json" set:html={JSON.stringify(item)} />)}
+
+    <!-- Ставим класс до первой отрисовки: без JS анимации появления не скрывают контент.
+         Если инициализация почему-то не выполнилась, класс снимается — текст снова виден. -->
+    <script is:inline>
+      document.documentElement.classList.add('js');
+      window.setTimeout(function () {
+        if (!window.__polisReady) document.documentElement.classList.remove('js');
+      }, 2500);
+    </script>
   </head>
   <body data-page-audience={audience ?? ''}>
     <a class="skip-link" href="#main">Перейти к содержимому</a>
@@ -56,48 +71,27 @@ const schemas = schema ? (Array.isArray(schema) ? schema : [schema]) : [];
       <slot />
     </main>
     <Footer />
+    <ToastViewport />
 
     <script>
-      // Меню на мобильных
-      const toggle = document.querySelector('[data-menu-toggle]');
-      const menu = document.querySelector<HTMLElement>('#mobile-menu');
-      if (toggle && menu) {
-        toggle.addEventListener('click', () => {
-          const open = menu.dataset.open === 'true';
-          menu.dataset.open = String(!open);
-          toggle.setAttribute('aria-expanded', String(!open));
-        });
-      }
+      import { initAudience } from '../lib/audience';
+      import { initMobileMenu } from '../lib/menu';
+      import { initAccordion } from '../lib/accordion';
+      import { initCatalog } from '../lib/catalog';
+      import { initSearch } from '../lib/search';
+      import { initReveal } from '../lib/motion';
+      import { initVersion } from '../lib/version';
 
-      // Запоминаем выбранную аудиторию
-      const AUD_KEY = 'polis:audience';
-      document.querySelectorAll<HTMLAnchorElement>('[data-audience-link]').forEach((link) => {
-        link.addEventListener('click', () => {
-          const value = link.dataset.audienceLink;
-          if (value) {
-            try {
-              localStorage.setItem(AUD_KEY, value);
-            } catch {
-              /* localStorage может быть недоступен */
-            }
-          }
-        });
-      });
+      initAudience();
+      initMobileMenu();
+      initAccordion();
+      initCatalog();
+      initSearch();
+      initReveal();
+      initVersion();
 
-      const pageAudience = document.body.dataset.pageAudience;
-      if (!pageAudience) {
-        try {
-          const saved = localStorage.getItem(AUD_KEY);
-          if (saved === 'individual' || saved === 'business') {
-            document.querySelectorAll<HTMLAnchorElement>('[data-audience-link]').forEach((link) => {
-              if (link.dataset.audienceLink === saved) link.setAttribute('aria-current', 'true');
-              else link.removeAttribute('aria-current');
-            });
-          }
-        } catch {
-          /* ignore */
-        }
-      }
+      // Сигнал для страховки в <head>: инициализация прошла, контент можно скрывать анимацией.
+      window.__polisReady = true;
     </script>
   </body>
 </html>

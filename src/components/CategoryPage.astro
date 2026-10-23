@@ -1,13 +1,17 @@
 ---
 import Base from '../layouts/Base.astro';
-import Breadcrumbs from './Breadcrumbs.astro';
+import Breadcrumbs from './ui/Breadcrumbs.astro';
+import Badge from './ui/Badge.astro';
+import CategoryCard from './ui/CategoryCard.astro';
+import EmptyState from './ui/EmptyState.astro';
+import Reveal from './ui/Reveal.astro';
 import Icon from './Icon.astro';
 import CatalogBrowser from './CatalogBrowser.astro';
 import Faq from './Faq.astro';
 import { categoryById } from '../data/categories';
-import { offersByCategory, audienceCount } from '../data/products';
-import { purchaseLabels, obligationShort } from '../data/types';
-import type { Category } from '../data/types';
+import { offersByCategory, audienceCount, publishedOffers } from '../data/products';
+import { purchaseLabels, obligationTone, obligationShort } from '../data/types';
+import type { Category, ObligationStatus } from '../data/types';
 
 interface Props {
   category: Category;
@@ -23,6 +27,38 @@ const related = category.related
   .filter((c): c is Category => Boolean(c) && c!.audience === audience);
 
 const methods = Array.from(new Set(offers.map((o) => purchaseLabels[o.purchase.method])));
+
+/* Обязательность считается по предложениям раздела, а не по категории:
+   в одном разделе спокойно живут обязательные и добровольные продукты. */
+const statusCounts = offers.reduce<Record<string, number>>((acc, offer) => {
+  acc[offer.obligation.status] = (acc[offer.obligation.status] ?? 0) + 1;
+  return acc;
+}, {});
+
+const pluralOffers = (n: number): string => {
+  const mod10 = n % 10;
+  const mod100 = n % 100;
+  if (mod10 === 1 && mod100 !== 11) return 'предложение';
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return 'предложения';
+  return 'предложений';
+};
+
+const statusSummary = (['required', 'conditional', 'voluntary'] as ObligationStatus[])
+  .filter((status) => statusCounts[status])
+  .map((status) => `${statusCounts[status]} ${obligationShort[status].toLowerCase()}`)
+  .join(' · ');
+
+const singleStatus =
+  offers.length > 0 && Object.keys(statusCounts).length === 1
+    ? (Object.keys(statusCounts)[0] as ObligationStatus)
+    : null;
+
+const statusesFor = (categoryId: string): ObligationStatus[] =>
+  Array.from(
+    new Set(
+      publishedOffers.filter((o) => o.categoryId === categoryId).map((o) => o.obligation.status)
+    )
+  );
 
 const schema = [
   {
@@ -61,10 +97,14 @@ const schema = [
         <h1 style="margin-top:12px">{category.title}</h1>
         <p class="page-head__lead">{category.lead}</p>
         <div class="meta-row" style="margin-top:18px">
-          <span class={`chip ${category.obligation.status === 'required' ? 'chip--warn' : 'chip--brand'}`}>
-            {obligationShort[category.obligation.status]}
-          </span>
-          <span class="chip">{offers.length} предложений</span>
+          {singleStatus ? (
+            <Badge tone={obligationTone[singleStatus]} size="lg" icon={singleStatus === 'required' ? 'warning' : singleStatus === 'voluntary' ? 'success' : 'info'}>
+              {obligationShort[singleStatus]}
+            </Badge>
+          ) : (
+            <Badge tone="neutral" size="lg" icon="info">Статус — у каждого продукта</Badge>
+          )}
+          <span class="chip">{offers.length} {pluralOffers(offers.length)}</span>
           {methods.slice(0, 2).map((method) => <span class="chip chip--outline">{method}</span>)}
         </div>
       </div>
@@ -77,12 +117,15 @@ const schema = [
             <span><strong>Кому:</strong> {category.whoFor[0]}</span>
           </div>
           <div class="fact-list__item">
-            <Icon name="shield-check" size={16} />
-            <span><strong>Обязательность:</strong> {category.obligation.label.toLowerCase()}</span>
+            <Icon name="info" size={16} />
+            <span>
+              <strong>Обязательность:</strong>
+              {statusSummary ? ` по продуктам — ${statusSummary}` : ' уточняется по продукту'}
+            </span>
           </div>
           <div class="fact-list__item">
             <Icon name="doc" size={16} />
-            <span><strong>В каталоге:</strong> {offers.length} проверенных предложений</span>
+            <span><strong>В каталоге:</strong> {offers.length} проверенных {pluralOffers(offers.length)}</span>
           </div>
           <div class="fact-list__item">
             <Icon name="external" size={16} />
@@ -112,13 +155,17 @@ const schema = [
       <div class="obligation">
         <Icon name="info" size={19} />
         <div>
-          <strong id="obligation-title">{category.obligation.label}</strong>
-          {category.obligation.text}
+          <strong id="obligation-title">Обязательность в разделе</strong>
+          <p>{category.obligation.text}</p>
+          <p class="obligation__condition">
+            Это описание вида страхования в целом. Статус каждого предложения указан в его
+            карточке: {statusSummary || 'в разделе пока нет подтверждённых предложений'}.
+          </p>
         </div>
       </div>
     </section>
 
-    <section class="section" aria-labelledby="diff-title">
+    <Reveal as="section" class="section">
       <div class="section-head">
         <div>
           <span class="eyebrow">Разобраться</span>
@@ -133,13 +180,13 @@ const schema = [
           </div>
         ))}
       </div>
-    </section>
+    </Reveal>
 
     <section class="section section--tight" aria-labelledby="offers-title" style="padding-top:0">
       <div class="section-head">
         <div>
           <span class="eyebrow">Предложения</span>
-          <h2 id="offers-title">{offers.length} предложений в разделе</h2>
+          <h2 id="offers-title">{offers.length} {pluralOffers(offers.length)} в разделе</h2>
           <p>Сравните покрытие, способ оформления и компанию. Каждая карточка ведёт на подробное описание и официальный источник.</p>
         </div>
       </div>
@@ -147,20 +194,19 @@ const schema = [
       {offers.length > 0 ? (
         <CatalogBrowser offers={offers} audience={audience} />
       ) : (
-        <div class="empty-state">
-          <h3>Пока нет подтверждённых предложений</h3>
-          <p>
-            Мы не заполняем раздел выдуманными продуктами. Если для этого вида страхования
-            не удалось подтвердить действующее предложение, он остаётся справочным.
-          </p>
-          <a class="btn btn--primary" href={`${basePath}/`}>Вернуться в каталог</a>
-        </div>
+        <EmptyState
+          title="Пока нет подтверждённых предложений"
+          description="Мы не заполняем раздел выдуманными продуктами. Если для этого вида страхования не удалось подтвердить действующее предложение, он остаётся справочным."
+          icon="info"
+          actionLabel="Вернуться в каталог"
+          href={`${basePath}/`}
+        />
       )}
     </section>
   </div>
 
   <div class="container">
-    <Faq items={category.faq} title="Вопросы по этому виду страхования" />
+    <Faq items={category.faq} title="Вопросы по этому виду страхования" idPrefix={`faq-${category.slug}`} />
   </div>
 
   {related.length > 0 && (
@@ -174,15 +220,12 @@ const schema = [
         </div>
         <div class="grid grid--3">
           {related.map((cat) => (
-            <a class="card card--hover cat-card" href={`${basePath}/${cat.slug}/`} style="min-height:auto">
-              <span class={`cat-card__icon tint-${cat.tint}`}><Icon name={cat.icon} size={22} /></span>
-              <span class="cat-card__title">{cat.navTitle}</span>
-              <span class="cat-card__text">{cat.short}</span>
-              <span class="cat-card__meta">
-                <span>{cat.obligation.label}</span>
-                <strong>Открыть →</strong>
-              </span>
-            </a>
+            <CategoryCard
+              category={cat}
+              count={publishedOffers.filter((o) => o.categoryId === cat.id).length}
+              statuses={statusesFor(cat.id)}
+              href={`${basePath}/${cat.slug}/`}
+            />
           ))}
         </div>
       </div>
@@ -194,7 +237,7 @@ const schema = [
       <div class="note">
         Информация в разделе объясняет вид страхования в целом. Условия конкретного продукта
         могут отличаться: проверяйте покрытие, исключения и лимиты в договоре страховщика.
-        Всего в каталоге {audienceCount(audience)} предложений для этой аудитории.
+        Всего в каталоге {audienceCount(audience)} {pluralOffers(audienceCount(audience))} для этой аудитории.
       </div>
     </div>
   </section>

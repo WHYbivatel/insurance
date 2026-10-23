@@ -1,6 +1,7 @@
 ---
 import { site } from '../data/site';
 import { categoriesByAudience } from '../data/categories';
+import VersionIndicator from './ui/VersionIndicator.astro';
 
 const year = new Date().getFullYear();
 const individual = categoriesByAudience('individual').slice(0, 4);
@@ -65,6 +66,7 @@ const business = categoriesByAudience('business').slice(0, 4);
         Итоговые условия определяет договор страховщика.
       </p>
       <p>Данные каталога проверены {new Date(site.updatedAt).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+      <VersionIndicator />
     </div>
   </div>
 </footer>

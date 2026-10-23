@@ -1,70 +1,43 @@
 ---
+/**
+ * Icon — единая точка подключения иконок Lucide.
+ *
+ * Иконки берутся из @lucide/astro и рендерятся как inline SVG на этапе сборки:
+ * на клиент не уходит ни байта JavaScript и не подключается вся библиотека.
+ * Карта имён живёт в src/lib/icons.ts — там же меняется иконка.
+ *
+ * Лицензия Lucide — ISC, см. THIRD_PARTY_NOTICES.md и https://lucide.dev/license
+ */
+import { icons, type IconName } from '../lib/icons';
+
 interface Props {
-  name: string;
+  name: IconName;
   size?: number;
   class?: string;
+  /** Толщина линий. По умолчанию 1.75 — единая для всего интерфейса. */
   strokeWidth?: number;
+  /** Если задано, иконка становится осмысленной для скринридера. */
+  title?: string;
 }
 
-const { name, size = 20, class: className = '', strokeWidth = 1.7 } = Astro.props;
+const { name, size = 20, class: className, strokeWidth = 1.75, title } = Astro.props;
 
-const icons: Record<string, string> = {
-  car: '<path d="M5 17h14M6.5 17v2M17.5 17v2"/><path d="M4 17v-4l2-5h12l2 5v4"/><path d="M4 13h16"/><circle cx="7.5" cy="14.5" r="1"/><circle cx="16.5" cy="14.5" r="1"/>',
-  'shield-car':
-    '<path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6l7-3z"/><path d="M8.5 14.5h7"/><path d="M9.5 14.5v1.5M14.5 14.5v1.5"/><path d="M9 12l1-2.5h4L15 12v2.5H9z"/>',
-  liability:
-    '<path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6l7-3z"/><path d="M9 12l2 2 4-4"/>',
-  home: '<path d="M4 10.5L12 4l8 6.5"/><path d="M6 9.5V20h12V9.5"/><path d="M10 20v-5h4v5"/>',
-  health:
-    '<path d="M12 20s-7-4.4-7-9.2A4 4 0 0 1 12 8a4 4 0 0 1 7 2.8C19 15.6 12 20 12 20z"/><path d="M8 12h2l1-2 2 4 1-2h2"/>',
-  travel:
-    '<circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17"/><path d="M12 3.5c2.4 2.3 3.6 5.2 3.6 8.5S14.4 18.2 12 20.5c-2.4-2.3-3.6-5.2-3.6-8.5S9.6 5.8 12 3.5z"/>',
-  life: '<path d="M12 20s-7-4.4-7-9.2A4 4 0 0 1 12 8a4 4 0 0 1 7 2.8C19 15.6 12 20 12 20z"/><path d="M12 8V5"/><path d="M10 5h4"/>',
-  people:
-    '<circle cx="9" cy="8.5" r="2.8"/><path d="M3.5 19c0-3 2.5-5 5.5-5s5.5 2 5.5 5"/><circle cx="17" cy="9.5" r="2.2"/><path d="M16 14.3c2.5.2 4.3 2 4.3 4.7"/>',
-  fleet:
-    '<path d="M3 16V9h9v7"/><path d="M12 12h4l3 3v1h-7"/><circle cx="7" cy="17.5" r="1.6"/><circle cx="16.5" cy="17.5" r="1.6"/><path d="M3 17.5h2.4M8.6 17.5H15M18.1 17.5H20"/>',
-  building:
-    '<path d="M4 20V6l8-3v17"/><path d="M12 9h8v11"/><path d="M4 20h16"/><path d="M7 8h2M7 11h2M7 14h2M15 12h2M15 15h2"/>',
-  cargo:
-    '<path d="M3 8l9-4 9 4v8l-9 4-9-4V8z"/><path d="M3 8l9 4 9-4M12 12v8"/><path d="M7.5 10.2v5"/>',
-  construction:
-    '<path d="M4 20h16"/><path d="M6 20V9l6-4 6 4v11"/><path d="M9 20v-5h6v5"/><path d="M12 5V2.5"/>',
-  ecology:
-    '<path d="M20 4c-8 0-13 3.6-13 9a6 6 0 0 0 6 6c5.4 0 7-5.4 7-15z"/><path d="M4 20c1.5-5 4.5-8.5 9-11"/>',
-  industry:
-    '<path d="M3 20V10l5 3V10l5 3V6l8 4v10H3z"/><path d="M7 20v-3M12 20v-3M17 20v-3"/>',
-  search: '<circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/>',
-  arrow: '<path d="M5 12h13"/><path d="M13 7l5 5-5 5"/>',
-  'arrow-up-right': '<path d="M7 17L17 7"/><path d="M8 7h9v9"/>',
-  check: '<path d="M5 12.5l4.5 4.5L19 7"/>',
-  info: '<circle cx="12" cy="12" r="8.5"/><path d="M12 11v5"/><path d="M12 8h.01"/>',
-  external:
-    '<path d="M14 5h5v5"/><path d="M19 5l-7 7"/><path d="M18 14v4a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h4"/>',
-  menu: '<path d="M4 7h16M4 12h16M4 17h16"/>',
-  close: '<path d="M6 6l12 12M18 6L6 18"/>',
-  filter: '<path d="M4 6h16M7 12h10M10 18h4"/>',
-  clock: '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
-  doc: '<path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4"/><path d="M10 12h5M10 15h5"/>',
-  spark: '<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3z"/>',
-  'shield-check':
-    '<path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6l7-3z"/><path d="M9 12l2 2 4-4"/>',
-};
+const Component = icons[name];
 
-const path = icons[name] ?? icons.info;
+if (!Component) {
+  throw new Error(`Неизвестная иконка «${name}». Добавьте её в карту src/lib/icons.ts.`);
+}
+
+/* Декоративная иконка скрыта от скринридеров; осмысленная получает имя. */
+const a11y = title
+  ? ({ role: 'img', 'aria-label': title } as const)
+  : ({ 'aria-hidden': 'true', focusable: 'false' } as const);
 ---
 
-<svg
-  class={className}
-  width={size}
-  height={size}
-  viewBox="0 0 24 24"
-  fill="none"
-  stroke="currentColor"
+<Component
+  size={size}
   stroke-width={strokeWidth}
-  stroke-linecap="round"
-  stroke-linejoin="round"
-  aria-hidden="true"
-  focusable="false"
-  set:html={path}
+  class={className}
+  color="currentColor"
+  {...a11y}
 />

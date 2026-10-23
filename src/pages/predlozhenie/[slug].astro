@@ -1,13 +1,16 @@
 ---
 import Base from '../../layouts/Base.astro';
-import Breadcrumbs from '../../components/Breadcrumbs.astro';
+import Breadcrumbs from '../../components/ui/Breadcrumbs.astro';
+import Badge from '../../components/ui/Badge.astro';
+import Button from '../../components/ui/Button.astro';
+import CompanyLogo from '../../components/ui/CompanyLogo.astro';
+import OfferCard from '../../components/ui/OfferCard.astro';
+import Steps from '../../components/ui/Steps.astro';
 import Icon from '../../components/Icon.astro';
-import CompanyMark from '../../components/CompanyMark.astro';
-import OfferCard from '../../components/OfferCard.astro';
 import { publishedOffers } from '../../data/products';
 import { companyById } from '../../data/companies';
 import { categoryById } from '../../data/categories';
-import { purchaseLabels, obligationShort } from '../../data/types';
+import { purchaseLabels, obligationTone, type ObligationStatus } from '../../data/types';
 import { site } from '../../data/site';
 
 export function getStaticPaths() {
@@ -28,9 +31,34 @@ const dateLabel = new Date(offer.checkedAt).toLocaleDateString('ru-RU', {
   year: 'numeric',
 });
 
+/* Обязательность берётся у предложения: внутри одной категории
+   встречаются и обязательные, и добровольные продукты. */
+const { obligation } = offer;
+
+const obligationIcon: Record<ObligationStatus, 'warning' | 'success' | 'info'> = {
+  required: 'warning',
+  voluntary: 'success',
+  conditional: 'info',
+};
+
 const related = publishedOffers
   .filter((o) => o.categoryId === offer.categoryId && o.audience === offer.audience && o.slug !== offer.slug)
   .slice(0, 3);
+
+const steps = [
+  {
+    title: 'Перейдите на сайт',
+    text: `Кнопка ведёт на ${host} — официальную страницу страховщика.`,
+  },
+  {
+    title: 'Заполните данные',
+    text: 'Данные для расчёта и договора вы вводите напрямую страховщику.',
+  },
+  {
+    title: 'Оплатите и получите полис',
+    text: 'Оплата и выдача документа происходят у страховой компании.',
+  },
+];
 
 const schema = [
   {
@@ -73,8 +101,9 @@ const schema = [
 
     <header class="offer-header">
       <div class="offer-header__company">
-        <a href={`/kompanii/${company.slug}/`} aria-label={`Страховщик ${company.name}`}>
-          <CompanyMark companyId={company.id} size="md" />
+        <a class="offer-header__brand" href={`/kompanii/${company.slug}/`}>
+          <CompanyLogo company={company} variant="compact" />
+          <span>{company.name}</span>
         </a>
         <span class="chip chip--outline">{audienceLabel}</span>
         <a class="chip" href={`${basePath}/${category.slug}/`}>{category.navTitle}</a>
@@ -83,9 +112,9 @@ const schema = [
       <p class="offer-header__tagline">{offer.tagline}</p>
       <div class="meta-row" style="margin-top:14px">
         <span class="chip chip--brand">{purchaseLabels[offer.purchase.method]}</span>
-        <span class={`chip ${category.obligation.status === 'required' ? 'chip--warn' : ''}`}>
-          {obligationShort[category.obligation.status]}
-        </span>
+        <Badge tone={obligationTone[obligation.status]} icon={obligationIcon[obligation.status]}>
+          {obligation.label}
+        </Badge>
         <span class="chip chip--outline">Проверено {dateLabel}</span>
       </div>
     </header>
@@ -124,13 +153,18 @@ const schema = [
 
         <section class="offer-section" aria-labelledby="obligation-title">
           <h2 id="obligation-title">Обязательность</h2>
-          <div class="obligation">
-            <Icon name="info" size={19} />
+          <div class:list={['obligation', `obligation--${obligation.status}`]}>
+            <Icon name={obligationIcon[obligation.status]} size={19} />
             <div>
-              <strong>{category.obligation.label}</strong>
-              {offer.obligationNote}
+              <strong>{obligation.label}</strong>
+              <p>{obligation.text}</p>
+              {obligation.condition && <p class="obligation__condition">{obligation.condition}</p>}
             </div>
           </div>
+          <p class="small muted" style="margin-top:12px">
+            Статус относится именно к этому продукту. В разделе «{category.navTitle}» могут быть
+            и другие предложения — с иным статусом обязательности.
+          </p>
         </section>
 
         <section class="offer-section" aria-labelledby="docs-title">
@@ -147,28 +181,16 @@ const schema = [
         <section class="offer-section" aria-labelledby="how-title">
           <h2 id="how-title">Как оформить</h2>
           <p>{offer.purchase.note}</p>
-          <div class="steps" style="margin-top:18px;grid-template-columns:repeat(3,minmax(0,1fr))">
-            <div class="step">
-              <span class="step__num">1</span>
-              <h3>Перейдите на сайт</h3>
-              <p>Кнопка ведёт на {host} — официальную страницу страховщика.</p>
-            </div>
-            <div class="step">
-              <span class="step__num">2</span>
-              <h3>Заполните данные</h3>
-              <p>Данные для расчёта и договора вы вводите напрямую страховщику.</p>
-            </div>
-            <div class="step">
-              <span class="step__num">3</span>
-              <h3>Оплатите и получите полис</h3>
-              <p>Оплата и выдача документа происходят у страховой компании.</p>
-            </div>
-          </div>
+          <Steps steps={steps} columns={3} class="steps--spaced" />
         </section>
 
         <div class="source-box">
           <span>
-            Источник: <a class="link-arrow" href={offer.source.url} target="_blank" rel="noopener noreferrer nofollow">{offer.source.label} <Icon name="arrow-up-right" size={14} /></a>
+            Источник:{' '}
+            <a class="link-arrow" href={offer.source.url} target="_blank" rel="noopener noreferrer nofollow">
+              {offer.source.label}
+              <Icon name="arrow-up-right" size={14} />
+            </a>
           </span>
           <span>Дата проверки: <strong>{dateLabel}</strong></span>
         </div>
@@ -193,15 +215,16 @@ const schema = [
         <div class="offer-cta offer-cta--aside">
           <p class="offer-cta__price">{offer.price.text}</p>
           {offer.price.note && <p class="offer-cta__note">{offer.price.note}</p>}
-          <a
-            class="btn btn--primary btn--block btn--lg"
+          <Button
             href={offer.purchase.url}
-            target="_blank"
-            rel="noopener noreferrer nofollow"
+            variant="primary"
+            size="lg"
+            block
+            external
+            iconRight="external"
           >
             {offer.purchase.ctaLabel}
-            <Icon name="external" size={16} />
-          </a>
+          </Button>
           <p class="offer-cta__domain">
             <Icon name="info" size={14} />
             <span>Оформление и оплата — на сайте страховщика: <strong>{host}</strong></span>
@@ -224,6 +247,10 @@ const schema = [
               <dd>{audienceLabel}</dd>
             </div>
             <div>
+              <dt>Обязательность</dt>
+              <dd>{obligation.label}</dd>
+            </div>
+            <div>
               <dt>Способ оформления</dt>
               <dd>{purchaseLabels[offer.purchase.method]}</dd>
             </div>
@@ -243,15 +270,9 @@ const schema = [
         <strong>{offer.title}</strong>
         {offer.price.text} · {host}
       </p>
-      <a
-        class="btn btn--primary"
-        href={offer.purchase.url}
-        target="_blank"
-        rel="noopener noreferrer nofollow"
-      >
+      <Button href={offer.purchase.url} variant="primary" external iconRight="external">
         {offer.purchase.ctaLabel}
-        <Icon name="external" size={15} />
-      </a>
+      </Button>
     </div>
   </div>
 </Base>

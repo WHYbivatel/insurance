@@ -1,15 +1,5 @@
 ---
-import Base from '../../layouts/Base.astro';
-import Breadcrumbs from '../../components/Breadcrumbs.astro';
-import Icon from '../../components/Icon.astro';
-import CatalogBrowser from '../../components/CatalogBrowser.astro';
-import Faq from '../../components/Faq.astro';
-import { categoriesByAudience } from '../../data/categories';
-import { obligationShort } from '../../data/types';
-import { offersByAudience, publishedOffers } from '../../data/products';
-
-const cats = categoriesByAudience('business');
-const offers = offersByAudience('business');
+import AudiencePage from '../../components/AudiencePage.astro';
 
 const faq = [
   {
@@ -31,74 +21,17 @@ const faq = [
 ];
 ---
 
-<Base
+<AudiencePage
+  audience="business"
   title="Страхование для бизнеса"
   description="Каталог страхования для юридических лиц и предпринимателей Казахстана: работники, автопарк, имущество, грузы, строительство, ответственность и экологические риски."
-  audience="business"
->
-  <div class="container">
-    <Breadcrumbs items={[{ label: 'Главная', href: '/' }, { label: 'Для бизнеса' }]} />
-
-    <div class="page-head">
-      <span class="eyebrow">Юридическим лицам и ИП</span>
-      <h1 class="page-head__title">Страхование для бизнеса</h1>
-      <p class="page-head__lead">
-        Восемь направлений: работники, транспорт, имущество, грузы, стройка, ответственность,
-        экология и отраслевые программы. Объясняем, что обязательно именно для вашей
-        деятельности, а что — добровольно.
-      </p>
-      <div class="meta-row" style="margin-top:16px">
-        <span class="chip chip--brand">{offers.length} проверенных предложений</span>
-        <span class="chip">6 страховщиков</span>
-        <a class="chip chip--outline" href="/dlya-sebya/">Перейти в раздел для себя →</a>
-      </div>
-    </div>
-
-    <section aria-labelledby="cats-title" style="padding-bottom:34px">
-      <h2 id="cats-title" class="sr-only">Разделы страхования для бизнеса</h2>
-      <div class="grid grid--4">
-        {cats.map((cat) => {
-          const count = publishedOffers.filter((o) => o.categoryId === cat.id).length;
-          return (
-            <a class="card card--hover cat-card" href={`/dlya-biznesa/${cat.slug}/`}>
-              <span class={`cat-card__icon tint-${cat.tint}`}><Icon name={cat.icon} size={22} /></span>
-              <span class="cat-card__title">{cat.navTitle}</span>
-              <span class="cat-card__text">{cat.short}</span>
-              <span class="cat-card__meta">
-                <span>{obligationShort[cat.obligation.status]}</span>
-                <strong>{count} предл.</strong>
-              </span>
-            </a>
-          );
-        })}
-      </div>
-    </section>
-
-    <hr class="divider" />
-
-    <section class="section" aria-labelledby="all-title">
-      <div class="section-head">
-        <div>
-          <span class="eyebrow">Каталог</span>
-          <h2 id="all-title">Все предложения для бизнеса</h2>
-          <p>Фильтруйте по компании, способу оформления и обязательности. Для корпоративных программ чаще нужна заявка и расчёт менеджера.</p>
-        </div>
-      </div>
-      <CatalogBrowser offers={offers} audience="business" />
-    </section>
-  </div>
-
-  <div class="container">
-    <Faq items={faq} title="Вопросы бизнеса" />
-  </div>
-
-  <section class="section section--tight">
-    <div class="container">
-      <div class="note">
-        Обязанность страхования зависит от деятельности компании и требований закона.
-        Каталог не заменяет юридическую консультацию: проверьте применимые нормы и условия
-        договора со страховщиком.
-      </div>
-    </div>
-  </section>
-</Base>
+  eyebrow="Юридическим лицам и ИП"
+  heading="Страхование для бизнеса"
+  lead="Восемь направлений: работники, транспорт, имущество, грузы, стройка, ответственность, экология и отраслевые программы. Объясняем, что обязательно именно для вашей деятельности, а что — добровольно."
+  catalogTitle="Все предложения для бизнеса"
+  catalogLead="Фильтруйте по компании, способу оформления и обязательности. Для корпоративных программ чаще нужна заявка и расчёт менеджера."
+  crossLink={{ href: '/dlya-sebya/', label: 'Перейти в раздел для себя →' }}
+  note="Обязанность страхования зависит от деятельности компании и требований закона. Каталог не заменяет юридическую консультацию: проверьте применимые нормы и условия договора со страховщиком."
+  faq={faq}
+  faqTitle="Вопросы бизнеса"
+/>

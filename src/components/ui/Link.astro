@@ -1,0 +1,34 @@
+---
+/**
+ * Link — текстовая ссылка с вариантами оформления.
+ * arrow — со стрелкой и сдвигом при наведении.
+ */
+import Icon from '../Icon.astro';
+import type { IconName } from '../../lib/icons';
+
+interface Props {
+  href: string;
+  variant?: 'default' | 'arrow' | 'muted';
+  external?: boolean;
+  icon?: IconName;
+  class?: string;
+  [key: string]: unknown;
+}
+
+const { href, variant = 'default', external = false, icon, class: className, ...rest } =
+  Astro.props;
+
+const classes = ['link', variant !== 'default' ? `link--${variant}` : '', className ?? '']
+  .filter(Boolean)
+  .join(' ');
+
+const externalAttrs = external
+  ? { target: '_blank', rel: 'noopener noreferrer nofollow' }
+  : {};
+---
+
+<a class={classes} href={href} {...externalAttrs} {...rest}>
+  <slot />
+  {variant === 'arrow' && <Icon name={icon ?? 'arrow'} size={15} />}
+  {variant === 'default' && icon && <Icon name={icon} size={14} />}
+</a>

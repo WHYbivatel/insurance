@@ -1,11 +1,17 @@
 ---
 import Base from '../layouts/Base.astro';
-import SearchBox from '../components/SearchBox.astro';
 import Icon from '../components/Icon.astro';
-import OfferCard from '../components/OfferCard.astro';
 import Faq from '../components/Faq.astro';
+import SearchInput from '../components/ui/SearchInput.astro';
+import AudienceSwitch from '../components/ui/AudienceSwitch.astro';
+import CategoryCard from '../components/ui/CategoryCard.astro';
+import OfferCard from '../components/ui/OfferCard.astro';
+import Steps from '../components/ui/Steps.astro';
+import Reveal from '../components/ui/Reveal.astro';
+import Link from '../components/ui/Link.astro';
+import Button from '../components/ui/Button.astro';
 import { site } from '../data/site';
-import { obligationShort } from '../data/types';
+import type { ObligationStatus } from '../data/types';
 import { categories, categoriesByAudience } from '../data/categories';
 import { companies } from '../data/companies';
 import { publishedOffers, featuredOffers, audienceCount, companyName } from '../data/products';
@@ -33,6 +39,17 @@ const searchItems = [
     type: 'Предложение',
   })),
 ];
+
+/* Обязательность раздела показываем только если она одинакова у всех его
+   предложений: категория не задаёт статус конкретного продукта. */
+const statusesFor = (categoryId: string): ObligationStatus[] =>
+  Array.from(
+    new Set(
+      publishedOffers.filter((o) => o.categoryId === categoryId).map((o) => o.obligation.status)
+    )
+  );
+const countFor = (categoryId: string): number =>
+  publishedOffers.filter((o) => o.categoryId === categoryId).length;
 
 const tasksIndividual = [
   { label: 'Мне нужна обязательная страховка на машину', href: '/dlya-sebya/ogpo/' },
@@ -77,6 +94,21 @@ const homeFaq = [
   },
 ];
 
+const steps = [
+  {
+    title: 'Выберите раздел и вид страхования',
+    text: '«Для себя» или «Для бизнеса», затем категория: ОГПО, КАСКО, квартира, работники, имущество. В каждом разделе есть короткое объяснение.',
+  },
+  {
+    title: 'Сравните условия и компанию',
+    text: 'Посмотрите покрытие, ограничения, способ оформления и дату проверки. Отфильтруйте по компании или онлайн-оформлению.',
+  },
+  {
+    title: 'Перейдите к страховщику',
+    text: 'Кнопка ведёт на официальный сайт компании. Договор, оплату и документы оформляет страховщик — мы не собираем персональные данные.',
+  },
+];
+
 const dateLabel = new Date(site.updatedAt).toLocaleDateString('ru-RU', {
   day: 'numeric',
   month: 'long',
@@ -103,7 +135,7 @@ const dateLabel = new Date(site.updatedAt).toLocaleDateString('ru-RU', {
 >
   <section class="hero">
     <div class="container hero__grid">
-      <div>
+      <div class="hero-stagger">
         <span class="eyebrow">Каталог страхования · Казахстан</span>
         <h1 class="hero__title">Найдите подходящую страховку в Казахстане</h1>
         <p class="lead hero__lead">
@@ -111,13 +143,14 @@ const dateLabel = new Date(site.updatedAt).toLocaleDateString('ru-RU', {
           у страховщика. Без навязанных услуг и выдуманных цен.
         </p>
 
-        <div class="hero__audience" role="group" aria-label="Выберите раздел каталога">
-          <a href="/dlya-sebya/" data-hero-audience="individual" aria-current="true">Для себя</a>
-          <a href="/dlya-biznesa/" data-hero-audience="business">Для бизнеса</a>
-        </div>
+        <AudienceSwitch label="Выберите раздел каталога" />
 
         <div class="hero__search">
-          <SearchBox items={searchItems} audience="individual" placeholder="ОГПО, КАСКО, квартира, ДМС или компания" />
+          <SearchInput
+            items={searchItems}
+            id="hero-search"
+            placeholder="ОГПО, КАСКО, квартира, ДМС или компания"
+          />
         </div>
 
         <div class="hero__hint">
@@ -165,7 +198,7 @@ const dateLabel = new Date(site.updatedAt).toLocaleDateString('ru-RU', {
     </div>
   </section>
 
-  <section class="section section--tight">
+  <Reveal as="section" class="section section--tight">
     <div class="container">
       <div class="section-head">
         <div>
@@ -179,7 +212,7 @@ const dateLabel = new Date(site.updatedAt).toLocaleDateString('ru-RU', {
         <div class="card" style="padding:24px">
           <div class="meta-row" style="justify-content:space-between;margin-bottom:14px">
             <h3>Для себя</h3>
-            <a class="link-arrow small" href="/dlya-sebya/">Все разделы <Icon name="arrow" size={15} /></a>
+            <Link href="/dlya-sebya/" variant="arrow" class="small">Все разделы</Link>
           </div>
           <div class="task-grid">
             {tasksIndividual.map((task, i) => (
@@ -194,7 +227,7 @@ const dateLabel = new Date(site.updatedAt).toLocaleDateString('ru-RU', {
         <div class="card" style="padding:24px">
           <div class="meta-row" style="justify-content:space-between;margin-bottom:14px">
             <h3>Для бизнеса</h3>
-            <a class="link-arrow small" href="/dlya-biznesa/">Все разделы <Icon name="arrow" size={15} /></a>
+            <Link href="/dlya-biznesa/" variant="arrow" class="small">Все разделы</Link>
           </div>
           <div class="task-grid">
             {tasksBusiness.map((task, i) => (
@@ -207,9 +240,9 @@ const dateLabel = new Date(site.updatedAt).toLocaleDateString('ru-RU', {
         </div>
       </div>
     </div>
-  </section>
+  </Reveal>
 
-  <section class="section section--surface">
+  <Reveal as="section" class="section section--surface">
     <div class="container">
       <div class="section-head">
         <div>
@@ -217,29 +250,23 @@ const dateLabel = new Date(site.updatedAt).toLocaleDateString('ru-RU', {
           <h2>Основные виды страхования</h2>
           <p>Автомобиль, жильё, здоровье, поездки и долгосрочные программы. В каждом разделе — объяснение, отличия и предложения компаний.</p>
         </div>
-        <a class="link-arrow" href="/dlya-sebya/">Весь каталог <Icon name="arrow" size={16} /></a>
+        <Link href="/dlya-sebya/" variant="arrow">Весь каталог</Link>
       </div>
 
       <div class="grid grid--4">
-        {individualCats.map((cat) => {
-          const count = publishedOffers.filter((o) => o.categoryId === cat.id).length;
-          return (
-            <a class="card card--hover cat-card" href={`/dlya-sebya/${cat.slug}/`}>
-              <span class={`cat-card__icon tint-${cat.tint}`}><Icon name={cat.icon} size={22} /></span>
-              <span class="cat-card__title">{cat.navTitle}</span>
-              <span class="cat-card__text">{cat.short}</span>
-              <span class="cat-card__meta">
-                <span>{obligationShort[cat.obligation.status]}</span>
-                <strong>{count > 0 ? `${count} предл.` : 'Объяснение'}</strong>
-              </span>
-            </a>
-          );
-        })}
+        {individualCats.map((cat) => (
+          <CategoryCard
+            category={cat}
+            count={countFor(cat.id)}
+            statuses={statusesFor(cat.id)}
+            href={`/dlya-sebya/${cat.slug}/`}
+          />
+        ))}
       </div>
     </div>
-  </section>
+  </Reveal>
 
-  <section class="section">
+  <Reveal as="section" class="section">
     <div class="container">
       <div class="section-head">
         <div>
@@ -252,12 +279,12 @@ const dateLabel = new Date(site.updatedAt).toLocaleDateString('ru-RU', {
         {featuredOffers('individual', 3).map((offer) => <OfferCard offer={offer} />)}
       </div>
       <div class="meta-row" style="margin-top:18px">
-        <a class="link-arrow" href="/dlya-sebya/">Смотреть все предложения для себя <Icon name="arrow" size={16} /></a>
+        <Link href="/dlya-sebya/" variant="arrow">Смотреть все предложения для себя</Link>
       </div>
     </div>
-  </section>
+  </Reveal>
 
-  <section class="section section--surface">
+  <Reveal as="section" class="section section--surface">
     <div class="container">
       <div class="section-head">
         <div>
@@ -265,33 +292,27 @@ const dateLabel = new Date(site.updatedAt).toLocaleDateString('ru-RU', {
           <h2>Что страхуют компании</h2>
           <p>Работники, автопарк, имущество, грузы, стройка, ответственность и специальные риски. Обязательность зависит от деятельности.</p>
         </div>
-        <a class="link-arrow" href="/dlya-biznesa/">Весь каталог <Icon name="arrow" size={16} /></a>
+        <Link href="/dlya-biznesa/" variant="arrow">Весь каталог</Link>
       </div>
 
       <div class="grid grid--4">
-        {businessCats.map((cat) => {
-          const count = publishedOffers.filter((o) => o.categoryId === cat.id).length;
-          return (
-            <a class="card card--hover cat-card" href={`/dlya-biznesa/${cat.slug}/`}>
-              <span class={`cat-card__icon tint-${cat.tint}`}><Icon name={cat.icon} size={22} /></span>
-              <span class="cat-card__title">{cat.navTitle}</span>
-              <span class="cat-card__text">{cat.short}</span>
-              <span class="cat-card__meta">
-                <span>{obligationShort[cat.obligation.status]}</span>
-                <strong>{count > 0 ? `${count} предл.` : 'Объяснение'}</strong>
-              </span>
-            </a>
-          );
-        })}
+        {businessCats.map((cat) => (
+          <CategoryCard
+            category={cat}
+            count={countFor(cat.id)}
+            statuses={statusesFor(cat.id)}
+            href={`/dlya-biznesa/${cat.slug}/`}
+          />
+        ))}
       </div>
 
       <div class="grid grid--3" style="margin-top:24px">
         {featuredOffers('business', 3).map((offer) => <OfferCard offer={offer} />)}
       </div>
     </div>
-  </section>
+  </Reveal>
 
-  <section class="section">
+  <Reveal as="section" class="section">
     <div class="container">
       <div class="section-head">
         <div>
@@ -299,23 +320,7 @@ const dateLabel = new Date(site.updatedAt).toLocaleDateString('ru-RU', {
           <h2>Три шага до подходящего предложения</h2>
         </div>
       </div>
-      <div class="steps">
-        <div class="step">
-          <span class="step__num">1</span>
-          <h3>Выберите раздел и вид страхования</h3>
-          <p>«Для себя» или «Для бизнеса», затем категория: ОГПО, КАСКО, квартира, работники, имущество. В каждом разделе есть короткое объяснение.</p>
-        </div>
-        <div class="step">
-          <span class="step__num">2</span>
-          <h3>Сравните условия и компанию</h3>
-          <p>Посмотрите покрытие, ограничения, способ оформления и дату проверки. Отфильтруйте по компании или онлайн-оформлению.</p>
-        </div>
-        <div class="step">
-          <span class="step__num">3</span>
-          <h3>Перейдите к страховщику</h3>
-          <p>Кнопка ведёт на официальный сайт компании. Договор, оплату и документы оформляет страховщик — мы не собираем персональные данные.</p>
-        </div>
-      </div>
+      <Steps steps={steps} columns={3} />
 
       <div class="grid grid--3" style="margin-top:26px">
         <div class="stat">
@@ -332,36 +337,21 @@ const dateLabel = new Date(site.updatedAt).toLocaleDateString('ru-RU', {
         </div>
       </div>
     </div>
-  </section>
+  </Reveal>
 
   <div class="container">
-    <Faq items={homeFaq} title="Коротко о сервисе" />
+    <Faq items={homeFaq} title="Коротко о сервисе" idPrefix="home-faq" />
   </div>
 
-  <section class="section section--tight">
+  <Reveal as="section" class="section section--tight">
     <div class="container">
       <div class="cta-band">
         <div>
           <h2>Не знаете, какой полис нужен?</h2>
           <p>Начните с раздела для себя или для бизнеса: там короткие объяснения и предложения, которые можно проверить по первоисточнику.</p>
         </div>
-        <a class="btn btn--secondary btn--lg" href="/dlya-sebya/">Начать выбор</a>
+        <Button href="/dlya-sebya/" variant="secondary" size="lg">Начать выбор</Button>
       </div>
     </div>
-  </section>
+  </Reveal>
 </Base>
-
-<script>
-  // Подсветка выбранного раздела на главной по сохранённому значению
-  try {
-    const saved = localStorage.getItem('polis:audience');
-    if (saved === 'individual' || saved === 'business') {
-      document.querySelectorAll<HTMLAnchorElement>('[data-hero-audience]').forEach((link) => {
-        if (link.dataset.heroAudience === saved) link.setAttribute('aria-current', 'true');
-        else link.removeAttribute('aria-current');
-      });
-    }
-  } catch {
-    /* ignore */
-  }
-</script>

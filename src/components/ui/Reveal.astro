@@ -1,0 +1,25 @@
+---
+/**
+ * Reveal — обёртка для появления блока при входе в область просмотра.
+ *
+ * Начальное состояние задаётся только при наличии класса .js на <html>,
+ * поэтому без JavaScript содержимое видно сразу. Наблюдатель один на страницу
+ * (lib/motion.ts), задержка задаётся через --reveal-delay.
+ */
+interface Props {
+  /** Задержка появления, мс. Держите небольшой: 0–200. */
+  delay?: number;
+  as?: 'div' | 'section' | 'li' | 'article';
+  class?: string;
+}
+
+const { delay = 0, as: Tag = 'div', class: className } = Astro.props;
+---
+
+<Tag
+  class:list={['reveal', className]}
+  data-reveal
+  style={delay ? `--reveal-delay:${delay}ms` : undefined}
+>
+  <slot />
+</Tag>

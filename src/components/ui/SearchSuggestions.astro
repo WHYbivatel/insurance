@@ -1,0 +1,22 @@
+---
+/**
+ * SearchSuggestions — панель подсказок для SearchInput.
+ * Разметка пустая: варианты строит клиентский скрипт поиска.
+ */
+interface Props {
+  id: string;
+  label?: string;
+  class?: string;
+}
+
+const { id, label = 'Подсказки поиска', class: className } = Astro.props;
+---
+
+<div
+  class:list={['search-results', className]}
+  id={id}
+  role="listbox"
+  aria-label={label}
+  data-search-results
+  data-open="false"
+></div>

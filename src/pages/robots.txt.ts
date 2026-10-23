@@ -5,6 +5,7 @@ export const GET: APIRoute = () => {
   const body = `User-agent: *
 Allow: /
 Disallow: /poisk/
+Disallow: /ui-kit/
 
 Sitemap: ${new URL('/sitemap.xml', site.url).href}
 `;

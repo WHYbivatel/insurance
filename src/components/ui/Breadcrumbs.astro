@@ -1,0 +1,36 @@
+---
+/**
+ * Breadcrumbs — хлебные крошки.
+ * Разделитель «/» рисуется псевдоэлементом в CSS, чтобы не дублировать его
+ * в разметке и не читать скринридером.
+ */
+interface Crumb {
+  label: string;
+  href?: string;
+}
+
+interface Props {
+  items: Crumb[];
+}
+
+const { items } = Astro.props;
+---
+
+<nav class="breadcrumbs" aria-label="Хлебные крошки">
+  <ol>
+    {
+      items.map((item, index) => {
+        const isLast = index === items.length - 1;
+        return (
+          <li>
+            {item.href && !isLast ? (
+              <a href={item.href}>{item.label}</a>
+            ) : (
+              <span aria-current="page">{item.label}</span>
+            )}
+          </li>
+        );
+      })
+    }
+  </ol>
+</nav>

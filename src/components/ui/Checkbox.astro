@@ -1,0 +1,33 @@
+---
+/**
+ * Checkbox — чекбокс фильтра с подписью и счётчиком.
+ * Если передан company, слева показывается компактный официальный логотип.
+ */
+import CompanyLogo from './CompanyLogo.astro';
+import type { Company } from '../../data/types';
+
+interface Props {
+  name: string;
+  value: string;
+  label: string;
+  count?: number;
+  checked?: boolean;
+  filter?: string;
+  company?: Company;
+}
+
+const { name, value, label, count, checked = false, filter, company } = Astro.props;
+---
+
+<label class:list={['check', company && 'check--company']}>
+  <input
+    type="checkbox"
+    name={name}
+    value={value}
+    checked={checked}
+    data-filter={filter}
+  />
+  {company && <CompanyLogo company={company} variant="compact" class="check__logo" />}
+  <span>{label}</span>
+  {typeof count === 'number' && <em>{count}</em>}
+</label>

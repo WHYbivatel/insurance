@@ -1,0 +1,30 @@
+---
+/**
+ * Steps — последовательность шагов.
+ * Сетка управляется компонентом и адаптивом, без inline-стилей на страницах.
+ */
+interface Step {
+  title: string;
+  text: string;
+}
+
+interface Props {
+  steps: Step[];
+  columns?: 2 | 3;
+  class?: string;
+}
+
+const { steps, columns = 3, class: className } = Astro.props;
+---
+
+<ol class:list={['steps', className]} data-cols={columns}>
+  {
+    steps.map((step, index) => (
+      <li class="steps__item step">
+        <span class="step__num">{String(index + 1).padStart(2, '0')}</span>
+        <h3 class="step__title">{step.title}</h3>
+        <p class="step__text">{step.text}</p>
+      </li>
+    ))
+  }
+</ol>

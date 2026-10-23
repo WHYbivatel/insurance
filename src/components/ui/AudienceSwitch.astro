@@ -1,0 +1,49 @@
+---
+/**
+ * AudienceSwitch — переключатель «Для себя» / «Для бизнеса».
+ *
+ * Фон выбранного сегмента двигается отдельным элементом (thumb) через
+ * transform, поэтому переход плавный и не влияет на кликабельность ссылок.
+ * На страницах без явной аудитории подсветка скрыта до восстановления выбора.
+ */
+import type { Audience } from '../../data/types';
+
+interface Props {
+  audience?: Audience;
+  /** Мобильный вариант на всю ширину. */
+  block?: boolean;
+  label?: string;
+  class?: string;
+}
+
+const { audience, block = false, label = 'Раздел каталога', class: className } = Astro.props;
+
+const index = audience === 'business' ? 1 : 0;
+---
+
+<div
+  class:list={['audience-switch', block && 'audience-switch--block', className]}
+  role="group"
+  aria-label={label}
+  data-audience-switch
+  data-active={audience ? 'set' : 'none'}
+  style={`--audience-index:${index}`}
+>
+  <span class="audience-switch__thumb" aria-hidden="true"></span>
+  <a
+    class="audience-switch__item"
+    href="/dlya-sebya/"
+    aria-current={audience === 'individual' ? 'true' : undefined}
+    data-audience-link="individual"
+  >
+    Для себя
+  </a>
+  <a
+    class="audience-switch__item"
+    href="/dlya-biznesa/"
+    aria-current={audience === 'business' ? 'true' : undefined}
+    data-audience-link="business"
+  >
+    Для бизнеса
+  </a>
+</div>

@@ -1,0 +1,600 @@
+---
+/**
+ * /ui-kit/ — витрина дизайн-системы.
+ *
+ * Страница показывает реальные компоненты (не копии разметки), поэтому
+ * любое изменение токенов или компонента видно здесь сразу.
+ * В поиске не индексируется и не попадает в sitemap.
+ */
+import Base from '../layouts/Base.astro';
+import Icon from '../components/Icon.astro';
+import Button from '../components/ui/Button.astro';
+import IconButton from '../components/ui/IconButton.astro';
+import Link from '../components/ui/Link.astro';
+import Badge from '../components/ui/Badge.astro';
+import Card from '../components/ui/Card.astro';
+import Input from '../components/ui/Input.astro';
+import Checkbox from '../components/ui/Checkbox.astro';
+import AudienceSwitch from '../components/ui/AudienceSwitch.astro';
+import CompanyLogo from '../components/ui/CompanyLogo.astro';
+import CompanyCard from '../components/ui/CompanyCard.astro';
+import CategoryCard from '../components/ui/CategoryCard.astro';
+import OfferCard from '../components/ui/OfferCard.astro';
+import SearchInput from '../components/ui/SearchInput.astro';
+import FilterPanel from '../components/ui/FilterPanel.astro';
+import Accordion from '../components/ui/Accordion.astro';
+import EmptyState from '../components/ui/EmptyState.astro';
+import Breadcrumbs from '../components/ui/Breadcrumbs.astro';
+import Steps from '../components/ui/Steps.astro';
+import VersionIndicator from '../components/ui/VersionIndicator.astro';
+import Reveal from '../components/ui/Reveal.astro';
+import { icons } from '../lib/icons';
+import { companies } from '../data/companies';
+import { categories } from '../data/categories';
+import { publishedOffers, offersByCompany, offersByCategory } from '../data/products';
+import type { ObligationStatus } from '../data/types';
+
+const palette = [
+  { name: 'bg', value: '#f7f5f0', role: 'фон страницы' },
+  { name: 'surface', value: '#ffffff', role: 'карточки и поля' },
+  { name: 'surface-soft', value: '#fbfaf6', role: 'мягкие блоки' },
+  { name: 'bg-deep', value: '#efece3', role: 'подложки' },
+  { name: 'ink', value: '#17201b', role: 'основной текст' },
+  { name: 'muted', value: '#5d6a62', role: 'вторичный текст' },
+  { name: 'line', value: '#e3e0d5', role: 'тонкие границы' },
+  { name: 'brand', value: '#0f5138', role: 'акцент' },
+  { name: 'brand-soft', value: '#e6efe7', role: 'выбранное состояние' },
+  { name: 'teal', value: '#0c6b63', role: 'ссылки и метки' },
+];
+
+const states = [
+  { name: 'success', value: '#1c6b45', bg: '#e8f3ec', icon: 'success' as const, role: 'успех' },
+  { name: 'info', value: '#1f5a7a', bg: '#e7f0f6', icon: 'info' as const, role: 'информация' },
+  { name: 'warning', value: '#8a5a1f', bg: '#f8efdf', icon: 'warning' as const, role: 'внимание' },
+  { name: 'error', value: '#97302a', bg: '#fbeae7', icon: 'error' as const, role: 'ошибка' },
+];
+
+const typeScale = [
+  { token: '--text-3xl', size: '36px', sample: 'Заголовок страницы' },
+  { token: '--text-2xl', size: '28px', sample: 'Заголовок раздела' },
+  { token: '--text-xl', size: '22px', sample: 'Подзаголовок' },
+  { token: '--text-lg', size: '18px', sample: 'Лид и крупный текст' },
+  { token: '--text-md', size: '16px', sample: 'Основной текст' },
+  { token: '--text-base', size: '15px', sample: 'Текст интерфейса' },
+  { token: '--text-sm', size: '13px', sample: 'Метаданные' },
+  { token: '--text-xs', size: '12px', sample: 'Подписи и сноски' },
+];
+
+const spacing = ['--space-1', '--space-2', '--space-3', '--space-4', '--space-5', '--space-6', '--space-7', '--space-8'];
+const spacingPx = [4, 8, 12, 16, 24, 32, 48, 64];
+const radii = [
+  { token: '--radius-xs', value: '8px' },
+  { token: '--radius-sm', value: '12px' },
+  { token: '--radius', value: '16px' },
+  { token: '--radius-lg', value: '24px' },
+  { token: '--radius-pill', value: '999px' },
+];
+
+const iconNames = Object.keys(icons) as (keyof typeof icons)[];
+
+const sampleOffer = publishedOffers.find((o) => o.obligation.status === 'voluntary') ?? publishedOffers[0];
+const sampleCategory = categories[0];
+const sampleCategoryStatuses = Array.from(
+  new Set(
+    offersByCategory(sampleCategory.audience, sampleCategory.id).map((o) => o.obligation.status)
+  )
+) as ObligationStatus[];
+
+const demoSteps = [
+  { title: 'Первый шаг', text: 'Короткое объяснение действия в одну-две строки.' },
+  { title: 'Второй шаг', text: 'Что происходит дальше и где это сделать.' },
+  { title: 'Третий шаг', text: 'Результат, который получает пользователь.' },
+];
+
+const demoFaq = [
+  { q: 'Как раскрывается блок?', a: 'Плавно, 180–220 мс: высота панели анимируется через grid-template-rows, шеврон поворачивается на 180°. Клавиатура и скрытый контент остаются доступными.' },
+  { q: 'Что происходит при reduced motion?', a: 'Движение убирается, состояние меняется сразу. Раскрытие, уведомления и фильтры продолжают работать.' },
+];
+---
+
+<Base
+  title="UI kit"
+  description="Дизайн-система каталога «Полис»: токены, компоненты, иконки, логотипы, уведомления и анимации."
+  noindex={true}
+>
+  <div class="container kit">
+    <div class="page-head">
+      <span class="eyebrow">Дизайн-система</span>
+      <h1 class="page-head__title page-head__title--wide">UI kit «Полис»</h1>
+      <p class="page-head__lead">
+        Все элементы собраны из общих компонентов и токенов. Изменение цвета, отступа,
+        радиуса или кривой анимации в <code>src/styles/tokens.css</code> меняет весь сайт,
+        включая эту страницу. Страница закрыта от индексации и не входит в sitemap.
+      </p>
+      <div class="meta-row" style="margin-top:14px">
+        <VersionIndicator />
+        <span class="chip">Lucide · ISC</span>
+        <span class="chip">Motion Mini</span>
+      </div>
+    </div>
+
+    <!-- ---------- Палитра ---------- -->
+    <section class="kit__section" aria-labelledby="kit-palette">
+      <h2 class="kit__title" id="kit-palette">Палитра</h2>
+      <p class="kit__note">
+        Тёплый светлый фон, графитовый текст, глубокий зелёный акцент. Семантические цвета
+        всегда используются парой «текст + мягкая заливка» и дублируются иконкой.
+      </p>
+
+      <p class="kit__label">Основа</p>
+      <div class="kit__swatches">
+        {palette.map((item) => (
+          <div class="kit__swatch">
+            <div class="kit__swatch-color" style={`background:var(--${item.name})`}></div>
+            <div class="kit__swatch-meta">
+              <code>--{item.name}</code>
+              <span>{item.value} · {item.role}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div class="kit__spacer"></div>
+
+      <p class="kit__label">Состояния</p>
+      <div class="kit__swatches">
+        {states.map((state) => (
+          <div class="kit__swatch">
+            <div class="kit__swatch-color" style={`background:var(--${state.name})`}></div>
+            <div class="kit__swatch-meta">
+              <code>--{state.name}</code>
+              <span>{state.value} · {state.role}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div class="kit__spacer"></div>
+
+      <p class="kit__label">Бейджи состояний</p>
+      <div class="kit__row">
+        <Badge tone="success" icon="success">Готово</Badge>
+        <Badge tone="info" icon="info">Информация</Badge>
+        <Badge tone="warning" icon="warning">Внимание</Badge>
+        <Badge tone="danger" icon="error">Ошибка</Badge>
+        <Badge tone="neutral">Нейтральный</Badge>
+        <Badge tone="brand">Бренд</Badge>
+      </div>
+    </section>
+
+    <!-- ---------- Типографика ---------- -->
+    <section class="kit__section" aria-labelledby="kit-type">
+      <h2 class="kit__title" id="kit-type">Типографика</h2>
+      <p class="kit__note">
+        Один шрифт Manrope Variable. Размеры — токены, поэтому шкала правится в одном месте.
+        Интерлиньяж спокойный: 1.6–1.7 для текста, 1.18–1.35 для заголовков.
+      </p>
+      {typeScale.map((row) => (
+        <div class="kit__type-row">
+          <code>{row.token}</code>
+          <span style={`font-size:var(${row.token})`}>{row.sample}</span>
+        </div>
+      ))}
+    </section>
+
+    <!-- ---------- Отступы, радиусы ---------- -->
+    <section class="kit__section" aria-labelledby="kit-space">
+      <h2 class="kit__title" id="kit-space">Отступы, радиусы, тени</h2>
+      <p class="kit__note">
+        Шаг сетки — 4 px. Кнопки и поля в основном 44–48 px высотой, радиусы 8/12/16/24 px.
+        Это база системы, а не требование механически повторять одни и те же значения.
+      </p>
+
+      <p class="kit__label">Интервалы</p>
+      <div class="kit__row">
+        {spacing.map((token, i) => (
+          <span class="kit__icon-cell" style="min-width:76px">
+            <span style={`display:block;width:${spacingPx[i]}px;height:8px;background:var(--brand);border-radius:2px`}></span>
+            <code>{token}</code>
+            <span>{spacingPx[i]}px</span>
+          </span>
+        ))}
+      </div>
+
+      <p class="kit__label">Радиусы</p>
+      <div class="kit__row">
+        {radii.map((radius) => (
+          <span class="kit__icon-cell" style="min-width:96px">
+            <span style={`display:block;width:48px;height:48px;background:var(--brand-soft);border:1px solid var(--line-strong);border-radius:var(${radius.token})`}></span>
+            <code>{radius.token}</code>
+            <span>{radius.value}</span>
+          </span>
+        ))}
+      </div>
+
+      <p class="kit__label">Тени</p>
+      <div class="kit__row">
+        {['--shadow-xs', '--shadow-sm', '--shadow', '--shadow-lg'].map((token) => (
+          <span class="kit__icon-cell" style="min-width:120px">
+            <span style={`display:block;width:64px;height:40px;background:var(--surface);border-radius:var(--radius-sm);box-shadow:var(${token})`}></span>
+            <code>{token}</code>
+          </span>
+        ))}
+      </div>
+    </section>
+
+    <!-- ---------- Кнопки ---------- -->
+    <section class="kit__section" aria-labelledby="kit-buttons">
+      <h2 class="kit__title" id="kit-buttons">Кнопки и ссылки</h2>
+      <p class="kit__note">
+        Пять вариантов и три размера. Внешняя ссылка получает иконку, которая сдвигается на
+        1–2 px при наведении. Фокус-кольцо появляется сразу и не зависит от анимации.
+      </p>
+
+      <div class="kit__row">
+        <Button>Основная</Button>
+        <Button variant="secondary">Вторичная</Button>
+        <Button variant="ghost">Прозрачная</Button>
+        <Button variant="subtle">Тихая</Button>
+        <Button variant="danger">Опасная</Button>
+      </div>
+
+      <div class="kit__row">
+        <Button size="sm">Маленькая</Button>
+        <Button size="md">Средняя</Button>
+        <Button size="lg">Большая</Button>
+        <Button disabled>Недоступна</Button>
+      </div>
+
+      <div class="kit__row">
+        <Button icon="search">С иконкой</Button>
+        <Button variant="secondary" href="https://lucide.dev" external iconRight="external">
+          Внешняя ссылка
+        </Button>
+        <IconButton icon="menu" label="Открыть меню" />
+        <IconButton icon="close" label="Закрыть" plain />
+      </div>
+
+      <div class="kit__row">
+        <Link href="/dlya-sebya/">Обычная ссылка</Link>
+        <Link href="/dlya-sebya/" variant="arrow">Со стрелкой</Link>
+        <Link href="/o-servise/" variant="muted">Приглушённая</Link>
+      </div>
+    </section>
+
+    <!-- ---------- Поля ---------- -->
+    <section class="kit__section" aria-labelledby="kit-fields">
+      <h2 class="kit__title" id="kit-fields">Поля и поиск</h2>
+      <p class="kit__note">
+        Поле поиска — combobox: фокус остаётся в поле, стрелки перемещают подсветку,
+        Enter открывает выбранный вариант, Escape закрывает подсказки.
+      </p>
+
+      <div class="kit__grid">
+        <Input id="kit-input" label="Обычное поле" placeholder="Например, КАСКО" hint="Подсказка под полем" />
+        <Input id="kit-input-invalid" label="Поле с ошибкой" value="неверный адрес" invalid hint="Проверьте формат" />
+        <Input id="kit-input-disabled" label="Недоступное" placeholder="Недоступно" disabled />
+      </div>
+
+      <div class="kit__spacer"></div>
+
+      <SearchInput
+        id="kit-search"
+        items={publishedOffers.slice(0, 12).map((o) => ({
+          title: o.title,
+          sub: o.tagline,
+          url: `/predlozhenie/${o.slug}/`,
+          type: 'Предложение',
+        }))}
+        placeholder="Начните вводить: ОГПО, квартира, ДМС"
+      />
+
+      <div class="kit__spacer"></div>
+
+      <p class="kit__label">Чекбоксы</p>
+      <div class="kit__grid">
+        <div>
+          <Checkbox name="kit" value="a" label="Не отмечен" count={12} />
+          <Checkbox name="kit" value="b" label="Отмечен" count={4} checked />
+          <Checkbox name="kit" value="c" label="Компания" count={7} company={companies[0]} />
+        </div>
+        <div>
+          <AudienceSwitch audience="individual" />
+          <div class="kit__spacer"></div>
+          <AudienceSwitch audience="business" block />
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------- Иконки ---------- -->
+    <section class="kit__section" aria-labelledby="kit-icons">
+      <h2 class="kit__title" id="kit-icons">Иконки</h2>
+      <p class="kit__note">
+        Lucide через официальную интеграцию для Astro: SVG рендерится на этапе сборки,
+        на клиент не уходит библиотека. Один viewBox 24, толщина линии 1.75,
+        цвет — <code>currentColor</code>. Декоративные иконки скрыты от скринридеров,
+        у кнопок только с иконкой есть <code>aria-label</code>.
+        Лицензия ISC — <a href="https://lucide.dev/license" rel="noopener noreferrer">lucide.dev/license</a>.
+      </p>
+      <div class="kit__icons">
+        {iconNames.map((name) => (
+          <div class="kit__icon-cell">
+            <Icon name={name} size={22} />
+            <code>{name}</code>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <!-- ---------- Логотипы ---------- -->
+    <section class="kit__section" aria-labelledby="kit-logos">
+      <h2 class="kit__title" id="kit-logos">Логотипы страховщиков</h2>
+      <p class="kit__note">
+        Официальные файлы, скачанные с сайтов компаний и сохранённые локально. Пропорции
+        сохраняются (<code>object-fit: contain</code>), горизонтальные логотипы не обрезаются
+        до квадрата. Рядом со знаком всегда есть читаемое название, поэтому изображение
+        помечено как декоративное.
+      </p>
+
+      <p class="kit__label">Компактный, обычный, крупный</p>
+      <div class="kit__row">
+        {companies.map((company) => (
+          <span class="company-lockup">
+            <CompanyLogo company={company} variant="compact" />
+            <CompanyLogo company={company} variant="default" />
+            <CompanyLogo company={company} variant="large" />
+            <span class="company-lockup__name">{company.name}</span>
+          </span>
+        ))}
+      </div>
+
+      <div class="kit__spacer"></div>
+
+      <p class="kit__label">Полный логотип (wide) и источник файла</p>
+      <div class="kit__logos">
+        {companies.map((company) => (
+          <div class="kit__logo-cell">
+            <CompanyLogo company={company} variant="wide" />
+            <strong>{company.name}</strong>
+            <span class="tiny muted">
+              <a href={company.logo.sourceUrl} rel="noopener noreferrer nofollow" target="_blank">
+                источник
+              </a>
+              {' · '}{company.logo.fetchedAt}
+            </span>
+            {company.logo.note && <span class="tiny muted">{company.logo.note}</span>}
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <!-- ---------- Карточки ---------- -->
+    <section class="kit__section" aria-labelledby="kit-cards">
+      <h2 class="kit__title" id="kit-cards">Карточки</h2>
+      <p class="kit__note">
+        Карточка предложения показывает обязательность именно этого продукта, а не всего
+        раздела. Карточка раздела честно пишет «Обязательные и добровольные», если внутри
+        есть продукты с разным статусом.
+      </p>
+
+      <div class="grid grid--3">
+        <OfferCard offer={sampleOffer} />
+        <CategoryCard
+          category={sampleCategory}
+          count={offersByCategory(sampleCategory.audience, sampleCategory.id).length}
+          statuses={sampleCategoryStatuses}
+          href={`/${sampleCategory.audience === 'individual' ? 'dlya-sebya' : 'dlya-biznesa'}/${sampleCategory.slug}/`}
+        />
+        <CompanyCard company={companies[0]} count={offersByCompany(companies[0].id).length} />
+      </div>
+
+      <div class="kit__spacer"></div>
+
+      <div class="grid grid--3">
+        <Card padding="md">
+          <p class="kit__label" style="margin-bottom:8px">Card · md</p>
+          <p class="small muted">Базовая поверхность с паддингом из токенов. Inline-стили не нужны.</p>
+        </Card>
+        <Card padding="md" hover>
+          <p class="kit__label" style="margin-bottom:8px">Card · hover</p>
+          <p class="small muted">Подъём на 2 px и мягкая тень только на устройствах с точным указателем.</p>
+        </Card>
+        <Card padding="lg">
+          <p class="kit__label" style="margin-bottom:8px">Card · lg</p>
+          <p class="small muted">Крупный паддинг для акцентных блоков и CTA.</p>
+        </Card>
+      </div>
+    </section>
+
+    <!-- ---------- Фильтры и пустое состояние ---------- -->
+    <section class="kit__section" aria-labelledby="kit-filters">
+      <h2 class="kit__title" id="kit-filters">Фильтры и пустой результат</h2>
+      <p class="kit__note">
+        Панель фильтров используется и в каталоге. Счётчики считаются по предложениям,
+        а не по категориям.
+      </p>
+      <div class="catalog" style="display:grid;grid-template-columns:minmax(0,260px) minmax(0,1fr);gap:var(--space-5);align-items:start">
+        <FilterPanel offers={publishedOffers.slice(0, 10)} />
+        <div>
+          <EmptyState
+            title="Ничего не найдено"
+            description="Так выглядит пустой результат: карточки действительно уходят из разметки, а не остаются видимыми под фильтром."
+          />
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------- Шаги, аккордеон, крошки ---------- -->
+    <section class="kit__section" aria-labelledby="kit-nav">
+      <h2 class="kit__title" id="kit-nav">Навигация и раскрытие</h2>
+      <p class="kit__note">
+        Шаги управляются переменной <code>--steps-cols</code>: на телефоне они выстраиваются
+        вертикально, без жёсткой сетки из трёх колонок.
+      </p>
+
+      <Breadcrumbs
+        items={[
+          { label: 'Главная', href: '/' },
+          { label: 'Для себя', href: '/dlya-sebya/' },
+          { label: 'ОГПО ВТС' },
+        ]}
+      />
+
+      <div class="kit__spacer"></div>
+
+      <Steps steps={demoSteps} columns={3} />
+
+      <div class="kit__spacer"></div>
+
+      <Accordion items={demoFaq} idPrefix="kit-faq" openFirst={1} />
+    </section>
+
+    <!-- ---------- Уведомления ---------- -->
+    <section class="kit__section" aria-labelledby="kit-toasts">
+      <h2 class="kit__title" id="kit-toasts">Уведомления</h2>
+      <p class="kit__note">
+        Четыре типа, отличаются цветом и иконкой. Появление 240 мс, исчезновение 160 мс.
+        Одновременно не больше трёх, одинаковые события объединяются, таймер встаёт на паузу
+        при наведении, фокусе внутри и в скрытой вкладке. Уведомления не забирают фокус.
+        Ошибки объявляются в отдельном assertive-регионе.
+      </p>
+
+      <div class="kit__row">
+        <Button variant="secondary" data-toast-demo="success">Успех</Button>
+        <Button variant="secondary" data-toast-demo="info">Информация</Button>
+        <Button variant="secondary" data-toast-demo="warning">Предупреждение</Button>
+        <Button variant="secondary" data-toast-demo="error">Ошибка</Button>
+        <Button variant="ghost" data-toast-demo="action">С действием</Button>
+        <Button variant="ghost" data-toast-demo="stack">Очередь из четырёх</Button>
+        <Button variant="ghost" data-toast-demo="close">Закрыть все</Button>
+      </div>
+
+      <div class="note">
+        Тайминги: успех 4 с, информация 5 с, предупреждение 7 с, ошибка 8 с, с действием —
+        11 с. Кнопка «Обновить» в уведомлении о новой версии не закрывает его до перезагрузки.
+      </div>
+    </section>
+
+    <!-- ---------- Анимации ---------- -->
+    <section class="kit__section" aria-labelledby="kit-motion">
+      <h2 class="kit__title" id="kit-motion">Анимации</h2>
+      <p class="kit__note">
+        Появление: прозрачность 0→1 и сдвиг на 12 px снизу, 340 мс, кривая
+        <code>cubic-bezier(0.22, 1, 0.36, 1)</code>. Шаг последовательности 45 мс.
+        Движение отключается при <code>prefers-reduced-motion: reduce</code>, а контент
+        остаётся доступным без JavaScript.
+      </p>
+
+      <div class="kit__row">
+        <Button variant="secondary" data-reveal-replay>Проиграть появление</Button>
+      </div>
+
+      <div class="kit__grid">
+        <div class="kit__reveal-box reveal" data-kit-reveal>Появление блока</div>
+        <div class="kit__reveal-box reveal" data-kit-reveal style="--reveal-delay:45ms">Задержка 45 мс</div>
+        <div class="kit__reveal-box reveal" data-kit-reveal style="--reveal-delay:90ms">Задержка 90 мс</div>
+      </div>
+
+      <div class="kit__spacer"></div>
+
+      <Reveal class="kit__reveal-box">Компонент Reveal (IntersectionObserver)</Reveal>
+    </section>
+
+    <!-- ---------- Мобильные компоненты ---------- -->
+    <section class="kit__section" aria-labelledby="kit-mobile">
+      <h2 class="kit__title" id="kit-mobile">Мобильные компоненты</h2>
+      <p class="kit__note">
+        Меню открывается кнопкой в шапке: пункты, «Компании» и «О сервисе» доступны,
+        Escape закрывает, фокус возвращается на кнопку, <code>aria-expanded</code>
+        синхронизирован, закрытая панель помечена <code>inert</code>.
+      </p>
+
+      <div class="kit__row">
+        <IconButton icon="menu" label="Меню (демонстрация)" aria-hidden="true" tabindex="-1" />
+        <span class="small muted">
+          Кнопка меню — та же, что в шапке. Откройте настоящее меню кнопкой «Меню» в шапке
+          на узком экране: пункты, «Компании» и «О сервисе» доступны, Escape закрывает.
+        </span>
+      </div>
+
+      <div class="kit__spacer"></div>
+
+      <div class="kit__row">
+        <VersionIndicator />
+        <span class="small muted">Индикатор версии в подвале: при новой сборке становится кнопкой «Обновить»</span>
+      </div>
+    </section>
+  </div>
+</Base>
+
+<script>
+  import { toast } from '../lib/toast';
+
+  const demo = document.querySelectorAll<HTMLElement>('[data-toast-demo]');
+  for (const button of demo) {
+    button.addEventListener('click', () => {
+      switch (button.dataset.toastDemo) {
+        case 'success':
+          toast.success('Ссылка скопирована');
+          break;
+        case 'info':
+          toast.info('Доступна новая версия сайта', {
+            description: 'Обновите страницу, чтобы получить актуальные данные каталога.',
+            action: { label: 'Обновить', onClick: () => window.location.reload(), closeOnClick: false },
+          });
+          break;
+        case 'warning':
+          toast.warning('Данные могли устареть', {
+            description: 'Проверка источника была больше месяца назад.',
+          });
+          break;
+        case 'error':
+          toast.error('Не удалось скопировать ссылку', {
+            description: 'Браузер запретил доступ к буферу обмена. Скопируйте адрес из строки браузера.',
+          });
+          break;
+        case 'action':
+          toast.info('Скопировать ссылку на подборку?', {
+            action: {
+              label: 'Скопировать',
+              onClick: () => {
+                void navigator.clipboard
+                  ?.writeText(window.location.href)
+                  .then(() => toast.success('Ссылка скопирована'))
+                  .catch(() => toast.error('Не удалось скопировать ссылку'));
+              },
+            },
+          });
+          break;
+        case 'stack':
+          toast.success('Первое событие');
+          toast.info('Второе событие');
+          toast.warning('Третье событие');
+          toast.error('Четвёртое событие вытеснит самое старое');
+          break;
+        case 'close':
+          toast.closeAll();
+          break;
+        default:
+          break;
+      }
+    });
+  }
+
+  // Повтор появления: снимаем и возвращаем класс, чтобы увидеть переход заново.
+  const replay = document.querySelector<HTMLElement>('[data-reveal-replay]');
+  replay?.addEventListener('click', () => {
+    const boxes = document.querySelectorAll<HTMLElement>('[data-kit-reveal]');
+    for (const box of boxes) box.classList.remove('is-visible');
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
+        for (const box of boxes) box.classList.add('is-visible');
+      });
+    });
+  });
+
+  // Демонстрационные блоки показываем сразу, не дожидаясь скролла.
+  for (const box of document.querySelectorAll<HTMLElement>('[data-kit-reveal]')) {
+    window.requestAnimationFrame(() => box.classList.add('is-visible'));
+  }
+</script>

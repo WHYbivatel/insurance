@@ -1,0 +1,125 @@
+---
+/**
+ * AudiencePage — общий каркас раздела каталога «Для себя» / «Для бизнеса».
+ *
+ * Обе страницы отличаются только текстами, поэтому разметка живёт здесь:
+ * заголовок, сетка разделов, общий каталог с фильтрами, FAQ и примечание.
+ */
+import Base from '../layouts/Base.astro';
+import Breadcrumbs from './ui/Breadcrumbs.astro';
+import CategoryCard from './ui/CategoryCard.astro';
+import CatalogBrowser from './CatalogBrowser.astro';
+import Faq from './Faq.astro';
+import Reveal from './ui/Reveal.astro';
+import { categoriesByAudience } from '../data/categories';
+import { offersByAudience, publishedOffers } from '../data/products';
+import type { Audience, ObligationStatus } from '../data/types';
+
+interface Props {
+  audience: Audience;
+  title: string;
+  description: string;
+  eyebrow: string;
+  heading: string;
+  lead: string;
+  catalogTitle: string;
+  catalogLead: string;
+  crossLink: { href: string; label: string };
+  note: string;
+  faq: { q: string; a: string }[];
+  faqTitle: string;
+}
+
+const {
+  audience,
+  title,
+  description,
+  eyebrow,
+  heading,
+  lead,
+  catalogTitle,
+  catalogLead,
+  crossLink,
+  note,
+  faq,
+  faqTitle,
+} = Astro.props;
+
+const audienceLabel = audience === 'individual' ? 'Для себя' : 'Для бизнеса';
+const basePath = audience === 'individual' ? '/dlya-sebya' : '/dlya-biznesa';
+const cats = categoriesByAudience(audience);
+const offers = offersByAudience(audience);
+
+const statusesFor = (categoryId: string): ObligationStatus[] =>
+  Array.from(
+    new Set(
+      publishedOffers.filter((o) => o.categoryId === categoryId).map((o) => o.obligation.status)
+    )
+  );
+const countFor = (categoryId: string): number =>
+  publishedOffers.filter((o) => o.categoryId === categoryId).length;
+
+const plural = (n: number): string => {
+  const mod10 = n % 10;
+  const mod100 = n % 100;
+  if (mod10 === 1 && mod100 !== 11) return 'предложение';
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return 'предложения';
+  return 'предложений';
+};
+
+const companiesCount = new Set(offers.map((o) => o.companyId)).size;
+---
+
+<Base title={title} description={description} audience={audience}>
+  <div class="container">
+    <Breadcrumbs items={[{ label: 'Главная', href: '/' }, { label: audienceLabel }]} />
+
+    <div class="page-head">
+      <span class="eyebrow">{eyebrow}</span>
+      <h1 class="page-head__title">{heading}</h1>
+      <p class="page-head__lead">{lead}</p>
+      <div class="meta-row" style="margin-top:16px">
+        <span class="chip chip--brand">{offers.length} проверенных {plural(offers.length)}</span>
+        <span class="chip">{companiesCount} страховщиков</span>
+        <a class="chip chip--outline" href={crossLink.href}>{crossLink.label}</a>
+      </div>
+    </div>
+
+    <section aria-labelledby="cats-title" style="padding-bottom:34px">
+      <h2 id="cats-title" class="sr-only">Разделы страхования: {audienceLabel.toLowerCase()}</h2>
+      <div class="grid grid--4">
+        {cats.map((cat) => (
+          <CategoryCard
+            category={cat}
+            count={countFor(cat.id)}
+            statuses={statusesFor(cat.id)}
+            href={`${basePath}/${cat.slug}/`}
+          />
+        ))}
+      </div>
+    </section>
+
+    <hr class="divider" />
+
+    <section class="section" aria-labelledby="all-title">
+      <div class="section-head">
+        <div>
+          <span class="eyebrow">Каталог</span>
+          <h2 id="all-title">{catalogTitle}</h2>
+          <p>{catalogLead}</p>
+        </div>
+      </div>
+      <CatalogBrowser offers={offers} audience={audience} />
+    </section>
+  </div>
+
+  <div class="container">
+    <Faq items={faq} title={faqTitle} idPrefix={`faq-${audience}`} />
+  </div>
+
+  <Reveal as="section" class="section section--tight">
+    <div class="container">
+      <div class="note">{note}</div>
+    </div>
+  </Reveal>
+</Base>

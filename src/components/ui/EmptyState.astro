@@ -1,0 +1,53 @@
+---
+/**
+ * EmptyState — пустой результат с объяснением и действием.
+ */
+import Icon from '../Icon.astro';
+import type { IconName } from '../../lib/icons';
+import Button from './Button.astro';
+
+interface Props {
+  title?: string;
+  description?: string;
+  icon?: IconName;
+  actionLabel?: string;
+  actionAttrs?: Record<string, string>;
+  href?: string;
+  class?: string;
+  /** Скрыть до первого результата фильтрации (показывает lib/catalog.ts). */
+  hidden?: boolean;
+}
+
+const {
+  title = 'Ничего не найдено',
+  description = 'Попробуйте изменить запрос или сбросить фильтры — в каталоге могут быть предложения с другим способом оформления.',
+  icon = 'search',
+  actionLabel,
+  actionAttrs = {},
+  href,
+  class: className,
+  hidden = false,
+} = Astro.props;
+---
+
+<div class:list={['empty-state', className]} data-empty role="status" hidden={hidden}>
+  <span class="empty-state__icon">
+    <Icon name={icon} size={22} />
+  </span>
+  <h3>{title}</h3>
+  <p>{description}</p>
+  {
+    actionLabel && href && (
+      <Button href={href} variant="primary">
+        {actionLabel}
+      </Button>
+    )
+  }
+  {
+    actionLabel && !href && (
+      <Button variant="primary" {...actionAttrs}>
+        {actionLabel}
+      </Button>
+    )
+  }
+</div>

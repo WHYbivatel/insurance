@@ -1,0 +1,68 @@
+---
+/**
+ * MobileMenu — выпадающее меню для узких экранов.
+ *
+ * Содержит те же пункты, что и настольная навигация, переключатель аудитории
+ * и разделы каталога для выбранной аудитории. Логика открытия, Escape и
+ * фокуса — в lib/menu.ts.
+ */
+import AudienceSwitch from './AudienceSwitch.astro';
+import { categoriesByAudience } from '../../data/categories';
+import type { Audience } from '../../data/types';
+
+interface NavLink {
+  href: string;
+  label: string;
+  key?: string;
+}
+
+interface Props {
+  links: NavLink[];
+  current: string;
+  audience?: Audience;
+}
+
+const { links, current, audience } = Astro.props;
+
+const isCurrent = (href: string) => current === href || (href !== '/' && current.startsWith(href));
+
+/* Разделы показываем для той аудитории, в которой находится пользователь.
+   На главной, где аудитория ещё не выбрана, — для частных лиц. */
+const activeAudience: Audience = audience ?? 'individual';
+const basePath = activeAudience === 'individual' ? '/dlya-sebya' : '/dlya-biznesa';
+const sections = categoriesByAudience(activeAudience);
+---
+
+<div class="mobile-menu" id="mobile-menu" data-open="false">
+  <div class="container">
+    <nav class="nav nav--mobile" aria-label="Мобильная навигация">
+      {
+        links.map((link) => (
+          <a
+            class="nav__link"
+            href={link.href}
+            aria-current={isCurrent(link.href) ? 'page' : undefined}
+            data-nav-audience={link.key || undefined}
+          >
+            {link.label}
+          </a>
+        ))
+      }
+    </nav>
+
+    <div class="mobile-menu__sections">
+      <p class="mobile-menu__label">
+        Разделы · {activeAudience === 'individual' ? 'Для себя' : 'Для бизнеса'}
+      </p>
+      <div class="mobile-menu__grid">
+        {sections.map((section) => (
+          <a class="mobile-menu__section" href={`${basePath}/${section.slug}/`}>
+            {section.navTitle}
+          </a>
+        ))}
+      </div>
+    </div>
+
+    <AudienceSwitch audience={audience} block label="Раздел каталога в мобильном меню" />
+  </div>
+</div>
