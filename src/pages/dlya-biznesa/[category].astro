@@ -1,0 +1,14 @@
+---
+import CategoryPage from '../../components/CategoryPage.astro';
+import { categories } from '../../data/categories';
+
+export function getStaticPaths() {
+  return categories
+    .filter((category) => category.audience === 'business')
+    .map((category) => ({ params: { category: category.slug }, props: { category } }));
+}
+
+const { category } = Astro.props;
+---
+
+<CategoryPage category={category} />

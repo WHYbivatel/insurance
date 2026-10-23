@@ -1,0 +1,367 @@
+---
+import Base from '../layouts/Base.astro';
+import SearchBox from '../components/SearchBox.astro';
+import Icon from '../components/Icon.astro';
+import OfferCard from '../components/OfferCard.astro';
+import Faq from '../components/Faq.astro';
+import { site } from '../data/site';
+import { obligationShort } from '../data/types';
+import { categories, categoriesByAudience } from '../data/categories';
+import { companies } from '../data/companies';
+import { publishedOffers, featuredOffers, audienceCount, companyName } from '../data/products';
+
+const individualCats = categoriesByAudience('individual');
+const businessCats = categoriesByAudience('business');
+
+const searchItems = [
+  ...categories.map((c) => ({
+    title: c.title,
+    sub: c.audience === 'individual' ? 'Для себя' : 'Для бизнеса',
+    url: c.audience === 'individual' ? `/dlya-sebya/${c.slug}/` : `/dlya-biznesa/${c.slug}/`,
+    type: 'Раздел',
+  })),
+  ...companies.map((c) => ({
+    title: c.name,
+    sub: `Страховщик · ${c.city}`,
+    url: `/kompanii/${c.slug}/`,
+    type: 'Компания',
+  })),
+  ...publishedOffers.map((o) => ({
+    title: o.title,
+    sub: `${companyName(o.companyId)} · ${o.audience === 'individual' ? 'для себя' : 'для бизнеса'}`,
+    url: `/predlozhenie/${o.slug}/`,
+    type: 'Предложение',
+  })),
+];
+
+const tasksIndividual = [
+  { label: 'Мне нужна обязательная страховка на машину', href: '/dlya-sebya/ogpo/' },
+  { label: 'Хочу защитить свою машину', href: '/dlya-sebya/kasko/' },
+  { label: 'Хочу застраховать квартиру', href: '/dlya-sebya/kvartira/' },
+  { label: 'Еду за границу', href: '/dlya-sebya/poezdki/' },
+  { label: 'Нужна защита здоровья и семьи', href: '/dlya-sebya/zdorove/' },
+];
+
+const tasksBusiness = [
+  { label: 'Нужно застраховать сотрудников', href: '/dlya-biznesa/rabotniki/' },
+  { label: 'Нужно застраховать автопарк', href: '/dlya-biznesa/avtopark/' },
+  { label: 'Хочу защитить имущество компании', href: '/dlya-biznesa/imushchestvo/' },
+  { label: 'Перевожу грузы', href: '/dlya-biznesa/gruzy/' },
+  { label: 'Нужна страховка для моей деятельности', href: '/dlya-biznesa/otvetstvennost/' },
+];
+
+const homeFaq = [
+  {
+    q: 'Вы продаёте страховки?',
+    a: 'Нет. «Полис» — каталог: мы объясняем виды страхования, показываем предложения компаний и ведём на официальный сайт страховщика. Договор, оплату и урегулирование оформляет страховая компания.',
+  },
+  {
+    q: 'Можно ли оформить полис прямо на сайте?',
+    a: 'Оформление происходит у страховщика: на его сайте, по телефону или в отделении. Мы не собираем ИИН, документы и данные автомобиля — это не нужно для подбора.',
+  },
+  {
+    q: 'Откуда берутся данные о продуктах?',
+    a: 'Со страниц страховщиков и официальных источников. У каждого предложения указана ссылка на источник и дата проверки. Мы не добавляем продукты, условия и цены, которые не удалось подтвердить.',
+  },
+  {
+    q: 'Почему у некоторых продуктов нет цены?',
+    a: 'Потому что стоимость рассчитывается индивидуально: зависит от автомобиля, жилья, возраста, срока и других параметров. В таких случаях мы так и пишем, а не показываем выдуманную сумму.',
+  },
+  {
+    q: 'Почему нет рейтингов и отзывов?',
+    a: 'Мы не публикуем неподтверждённые рейтинги, награды и отзывы. Вместо этого показываем факты о продукте, способ оформления и ссылку на первоисточник — решение можно принять по условиям.',
+  },
+  {
+    q: 'Вы связаны со страховыми компаниями?',
+    a: 'Сервис не заявляет партнёрства со страховщиками и не имеет страховой лицензии. Мы не получаем комиссию за переходы в рамках этой версии каталога.',
+  },
+];
+
+const dateLabel = new Date(site.updatedAt).toLocaleDateString('ru-RU', {
+  day: 'numeric',
+  month: 'long',
+  year: 'numeric',
+});
+---
+
+<Base
+  title={site.name}
+  description={site.description}
+  schema={{
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: 'Полис',
+    url: site.url,
+    inLanguage: 'ru-KZ',
+    description: site.description,
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: `${site.url}/poisk/?q={search_term_string}`,
+      'query-input': 'required name=search_term_string',
+    },
+  }}
+>
+  <section class="hero">
+    <div class="container hero__grid">
+      <div>
+        <span class="eyebrow">Каталог страхования · Казахстан</span>
+        <h1 class="hero__title">Найдите подходящую страховку в Казахстане</h1>
+        <p class="lead hero__lead">
+          Разберитесь в условиях, посмотрите предложения компаний и перейдите к оформлению
+          у страховщика. Без навязанных услуг и выдуманных цен.
+        </p>
+
+        <div class="hero__audience" role="group" aria-label="Выберите раздел каталога">
+          <a href="/dlya-sebya/" data-hero-audience="individual" aria-current="true">Для себя</a>
+          <a href="/dlya-biznesa/" data-hero-audience="business">Для бизнеса</a>
+        </div>
+
+        <div class="hero__search">
+          <SearchBox items={searchItems} audience="individual" placeholder="ОГПО, КАСКО, квартира, ДМС или компания" />
+        </div>
+
+        <div class="hero__hint">
+          <span>Часто ищут:</span>
+          <a href="/dlya-sebya/ogpo/">ОГПО ВТС</a>
+          <a href="/dlya-sebya/kasko/">КАСКО</a>
+          <a href="/dlya-sebya/kvartira/">Квартира</a>
+          <a href="/dlya-biznesa/rabotniki/">Работники</a>
+        </div>
+      </div>
+
+      <div class="hero__visual" aria-hidden="true">
+        <div class="hero__glow"></div>
+        <div class="policy-card">
+          <div class="policy-card__top">
+            <span class="policy-card__brand">
+              <span class="logo__mark" style="width:28px;height:28px;border-radius:9px">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                  <path d="M12 2.6l7.4 3.2v5.1c0 4.8-3.1 8.5-7.4 10.5-4.3-2-7.4-5.7-7.4-10.5V5.8L12 2.6z" stroke="#fff" stroke-width="1.6" />
+                  <path d="M8.8 12l2.2 2.2 4.4-4.4" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+              </span>
+              Полис
+            </span>
+            <span class="policy-card__badge">Проверено</span>
+          </div>
+          <p class="policy-card__title">ОГПО ВТС</p>
+          <div class="policy-card__rows">
+            <div class="policy-card__row"><span>Страховщик</span><span>Евразия</span></div>
+            <div class="policy-card__row"><span>Оформление</span><span>Онлайн</span></div>
+            <div class="policy-card__row"><span>Проверено</span><span>{dateLabel}</span></div>
+          </div>
+          <div class="policy-card__foot">
+            <span class="policy-card__check">
+              <Icon name="check" size={14} /> Источник — сайт страховщика
+            </span>
+            <span>1 из {audienceCount('individual')}</span>
+          </div>
+        </div>
+        <div class="floating-note">
+          <span class="floating-note__icon"><Icon name="shield-check" size={17} /></span>
+          <span>Оформление и оплата — на сайте страховой компании</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--tight">
+    <div class="container">
+      <div class="section-head">
+        <div>
+          <span class="eyebrow">С чего начать</span>
+          <h2>Выберите свою задачу</h2>
+          <p>Пять частых ситуаций для частных лиц и для бизнеса. Каждая ведёт в раздел с объяснением и предложениями.</p>
+        </div>
+      </div>
+
+      <div class="grid grid--2">
+        <div class="card" style="padding:24px">
+          <div class="meta-row" style="justify-content:space-between;margin-bottom:14px">
+            <h3>Для себя</h3>
+            <a class="link-arrow small" href="/dlya-sebya/">Все разделы <Icon name="arrow" size={15} /></a>
+          </div>
+          <div class="task-grid">
+            {tasksIndividual.map((task, i) => (
+              <a class="task-link" href={task.href}>
+                <span class="task-link__num">{String(i + 1).padStart(2, '0')}</span>
+                {task.label}
+              </a>
+            ))}
+          </div>
+        </div>
+
+        <div class="card" style="padding:24px">
+          <div class="meta-row" style="justify-content:space-between;margin-bottom:14px">
+            <h3>Для бизнеса</h3>
+            <a class="link-arrow small" href="/dlya-biznesa/">Все разделы <Icon name="arrow" size={15} /></a>
+          </div>
+          <div class="task-grid">
+            {tasksBusiness.map((task, i) => (
+              <a class="task-link" href={task.href}>
+                <span class="task-link__num">{String(i + 1).padStart(2, '0')}</span>
+                {task.label}
+              </a>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--surface">
+    <div class="container">
+      <div class="section-head">
+        <div>
+          <span class="eyebrow">Для себя</span>
+          <h2>Основные виды страхования</h2>
+          <p>Автомобиль, жильё, здоровье, поездки и долгосрочные программы. В каждом разделе — объяснение, отличия и предложения компаний.</p>
+        </div>
+        <a class="link-arrow" href="/dlya-sebya/">Весь каталог <Icon name="arrow" size={16} /></a>
+      </div>
+
+      <div class="grid grid--4">
+        {individualCats.map((cat) => {
+          const count = publishedOffers.filter((o) => o.categoryId === cat.id).length;
+          return (
+            <a class="card card--hover cat-card" href={`/dlya-sebya/${cat.slug}/`}>
+              <span class={`cat-card__icon tint-${cat.tint}`}><Icon name={cat.icon} size={22} /></span>
+              <span class="cat-card__title">{cat.navTitle}</span>
+              <span class="cat-card__text">{cat.short}</span>
+              <span class="cat-card__meta">
+                <span>{obligationShort[cat.obligation.status]}</span>
+                <strong>{count > 0 ? `${count} предл.` : 'Объяснение'}</strong>
+              </span>
+            </a>
+          );
+        })}
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="section-head">
+        <div>
+          <span class="eyebrow">Проверенные предложения</span>
+          <h2>Что можно посмотреть сейчас</h2>
+          <p>Предложения, у которых подтверждены продукт, покрытие и ссылка на оформление. Без рейтингов и обещаний «лучшего тарифа».</p>
+        </div>
+      </div>
+      <div class="grid grid--3">
+        {featuredOffers('individual', 3).map((offer) => <OfferCard offer={offer} />)}
+      </div>
+      <div class="meta-row" style="margin-top:18px">
+        <a class="link-arrow" href="/dlya-sebya/">Смотреть все предложения для себя <Icon name="arrow" size={16} /></a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--surface">
+    <div class="container">
+      <div class="section-head">
+        <div>
+          <span class="eyebrow">Для бизнеса</span>
+          <h2>Что страхуют компании</h2>
+          <p>Работники, автопарк, имущество, грузы, стройка, ответственность и специальные риски. Обязательность зависит от деятельности.</p>
+        </div>
+        <a class="link-arrow" href="/dlya-biznesa/">Весь каталог <Icon name="arrow" size={16} /></a>
+      </div>
+
+      <div class="grid grid--4">
+        {businessCats.map((cat) => {
+          const count = publishedOffers.filter((o) => o.categoryId === cat.id).length;
+          return (
+            <a class="card card--hover cat-card" href={`/dlya-biznesa/${cat.slug}/`}>
+              <span class={`cat-card__icon tint-${cat.tint}`}><Icon name={cat.icon} size={22} /></span>
+              <span class="cat-card__title">{cat.navTitle}</span>
+              <span class="cat-card__text">{cat.short}</span>
+              <span class="cat-card__meta">
+                <span>{obligationShort[cat.obligation.status]}</span>
+                <strong>{count > 0 ? `${count} предл.` : 'Объяснение'}</strong>
+              </span>
+            </a>
+          );
+        })}
+      </div>
+
+      <div class="grid grid--3" style="margin-top:24px">
+        {featuredOffers('business', 3).map((offer) => <OfferCard offer={offer} />)}
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="section-head">
+        <div>
+          <span class="eyebrow">Как это работает</span>
+          <h2>Три шага до подходящего предложения</h2>
+        </div>
+      </div>
+      <div class="steps">
+        <div class="step">
+          <span class="step__num">1</span>
+          <h3>Выберите раздел и вид страхования</h3>
+          <p>«Для себя» или «Для бизнеса», затем категория: ОГПО, КАСКО, квартира, работники, имущество. В каждом разделе есть короткое объяснение.</p>
+        </div>
+        <div class="step">
+          <span class="step__num">2</span>
+          <h3>Сравните условия и компанию</h3>
+          <p>Посмотрите покрытие, ограничения, способ оформления и дату проверки. Отфильтруйте по компании или онлайн-оформлению.</p>
+        </div>
+        <div class="step">
+          <span class="step__num">3</span>
+          <h3>Перейдите к страховщику</h3>
+          <p>Кнопка ведёт на официальный сайт компании. Договор, оплату и документы оформляет страховщик — мы не собираем персональные данные.</p>
+        </div>
+      </div>
+
+      <div class="grid grid--3" style="margin-top:26px">
+        <div class="stat">
+          <p class="stat__value">{companies.length}</p>
+          <p class="stat__label">страховщиков в каталоге</p>
+        </div>
+        <div class="stat">
+          <p class="stat__value">{publishedOffers.length}</p>
+          <p class="stat__label">предложений с указанием источника</p>
+        </div>
+        <div class="stat">
+          <p class="stat__value" style="font-size:1.15rem;line-height:1.3">{dateLabel}</p>
+          <p class="stat__label">дата последней проверки каталога</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="container">
+    <Faq items={homeFaq} title="Коротко о сервисе" />
+  </div>
+
+  <section class="section section--tight">
+    <div class="container">
+      <div class="cta-band">
+        <div>
+          <h2>Не знаете, какой полис нужен?</h2>
+          <p>Начните с раздела для себя или для бизнеса: там короткие объяснения и предложения, которые можно проверить по первоисточнику.</p>
+        </div>
+        <a class="btn btn--secondary btn--lg" href="/dlya-sebya/">Начать выбор</a>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<script>
+  // Подсветка выбранного раздела на главной по сохранённому значению
+  try {
+    const saved = localStorage.getItem('polis:audience');
+    if (saved === 'individual' || saved === 'business') {
+      document.querySelectorAll<HTMLAnchorElement>('[data-hero-audience]').forEach((link) => {
+        if (link.dataset.heroAudience === saved) link.setAttribute('aria-current', 'true');
+        else link.removeAttribute('aria-current');
+      });
+    }
+  } catch {
+    /* ignore */
+  }
+</script>

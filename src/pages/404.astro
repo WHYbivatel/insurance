@@ -1,0 +1,22 @@
+---
+import Base from '../layouts/Base.astro';
+import Icon from '../components/Icon.astro';
+---
+
+<Base title="Страница не найдена" description="Страница не найдена. Перейдите в каталог страхования для частных лиц или бизнеса." noindex={true}>
+  <div class="container container--narrow" style="padding-block:64px 80px;text-align:center">
+    <p class="eyebrow" style="justify-content:center">Ошибка 404</p>
+    <h1 style="margin-top:14px">Такой страницы нет</h1>
+    <p class="lead" style="margin:16px auto 26px">
+      Возможно, адрес изменился или в ссылке опечатка. Каталог доступен в двух разделах —
+      для частных лиц и для бизнеса.
+    </p>
+    <div class="meta-row" style="justify-content:center">
+      <a class="btn btn--primary btn--lg" href="/dlya-sebya/">Для себя</a>
+      <a class="btn btn--secondary btn--lg" href="/dlya-biznesa/">Для бизнеса</a>
+    </div>
+    <p style="margin-top:26px">
+      <a class="link-arrow" href="/">На главную <Icon name="arrow" size={15} /></a>
+    </p>
+  </div>
+</Base>

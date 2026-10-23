@@ -1,0 +1,137 @@
+---
+import Icon from './Icon.astro';
+import type { Audience } from '../data/types';
+
+interface Item {
+  title: string;
+  sub: string;
+  url: string;
+  type: string;
+}
+
+interface Props {
+  items: Item[];
+  audience?: Audience;
+  placeholder?: string;
+  action?: string;
+}
+
+const { items, placeholder = 'Введите вид страховки или компанию', action = '/poisk/' } = Astro.props;
+const json = JSON.stringify(items).replace(/</g, '\\u003c');
+---
+
+<form class="search" action={action} method="get" role="search" data-search>
+  <Icon name="search" size={19} class="search__icon" />
+  <label class="sr-only" for="hero-search">Поиск по видам страхования и компаниям</label>
+  <input
+    class="search__input"
+    id="hero-search"
+    type="search"
+    name="q"
+    placeholder={placeholder}
+    autocomplete="off"
+    role="combobox"
+    aria-expanded="false"
+    aria-controls="search-results"
+    aria-autocomplete="list"
+    data-search-input
+  />
+  <button class="search__submit" type="submit">Найти</button>
+  <div class="search-results" id="search-results" role="listbox" aria-label="Подсказки поиска" data-search-results></div>
+</form>
+
+<script type="application/json" id="search-index" set:html={json} />
+
+<script>
+  const form = document.querySelector<HTMLFormElement>('[data-search]');
+  const input = document.querySelector<HTMLInputElement>('[data-search-input]');
+  const panel = document.querySelector<HTMLElement>('[data-search-results]');
+  const indexEl = document.querySelector<HTMLScriptElement>('#search-index');
+
+  if (form && input && panel && indexEl) {
+    const items: { title: string; sub: string; url: string; type: string }[] = JSON.parse(indexEl.textContent || '[]');
+    let active = -1;
+
+    const normalize = (value: string) => value.toLowerCase().replace(/ё/g, 'е').trim();
+
+    const render = (query: string) => {
+      const q = normalize(query);
+      panel.innerHTML = '';
+      active = -1;
+
+      if (q.length < 2) {
+        panel.dataset.open = 'false';
+        input.setAttribute('aria-expanded', 'false');
+        return;
+      }
+
+      const matches = items
+        .filter((item) => normalize(`${item.title} ${item.sub} ${item.type}`).includes(q))
+        .slice(0, 7);
+
+      if (matches.length === 0) {
+        const empty = document.createElement('p');
+        empty.className = 'search-empty';
+        empty.textContent = 'Ничего не нашли. Попробуйте «ОГПО», «КАСКО», «квартира» или название компании.';
+        panel.append(empty);
+      } else {
+        matches.forEach((item, i) => {
+          const link = document.createElement('a');
+          link.className = 'search-result';
+          link.href = item.url;
+          link.setAttribute('role', 'option');
+          link.dataset.index = String(i);
+          link.innerHTML = `<span class="search-result__type">${item.type}</span><span class="search-result__text">${item.title}<span class="search-result__sub">${item.sub}</span></span>`;
+          panel.append(link);
+        });
+      }
+
+      panel.dataset.open = 'true';
+      input.setAttribute('aria-expanded', 'true');
+    };
+
+    const close = () => {
+      panel.dataset.open = 'false';
+      input.setAttribute('aria-expanded', 'false');
+      active = -1;
+    };
+
+    input.addEventListener('input', () => render(input.value));
+
+    input.addEventListener('keydown', (event) => {
+      const links = Array.from(panel.querySelectorAll<HTMLAnchorElement>('.search-result'));
+      if (event.key === 'Escape') {
+        close();
+        return;
+      }
+      if (!links.length) return;
+      if (event.key === 'ArrowDown') {
+        event.preventDefault();
+        active = (active + 1) % links.length;
+        links[active]?.focus();
+      }
+      if (event.key === 'ArrowUp') {
+        event.preventDefault();
+        active = (active - 1 + links.length) % links.length;
+        links[active]?.focus();
+      }
+      if (event.key === 'Enter' && active >= 0) {
+        event.preventDefault();
+        links[active]?.click();
+      }
+    });
+
+    panel.addEventListener('click', () => close());
+
+    document.addEventListener('click', (event) => {
+      if (!form.contains(event.target as Node)) close();
+    });
+
+    form.addEventListener('submit', (event) => {
+      if (active >= 0) {
+        event.preventDefault();
+        panel.querySelector<HTMLAnchorElement>(`.search-result[data-index="${active}"]`)?.click();
+      }
+    });
+  }
+</script>

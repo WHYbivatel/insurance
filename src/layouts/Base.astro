@@ -1,0 +1,103 @@
+---
+import '../styles/global.css';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { site } from '../data/site';
+import type { Audience } from '../data/types';
+
+interface Props {
+  title: string;
+  description: string;
+  audience?: Audience;
+  noindex?: boolean;
+  schema?: Record<string, unknown> | Record<string, unknown>[];
+}
+
+const { title, description, audience, noindex = false, schema } = Astro.props;
+const fullTitle = title === site.name ? `${site.name} — ${site.tagline}` : `${title} — ${site.name}`;
+const canonical = new URL(Astro.url.pathname, site.url).href;
+const ogImage = new URL('/og.svg', site.url).href;
+const schemas = schema ? (Array.isArray(schema) ? schema : [schema]) : [];
+---
+
+<!doctype html>
+<html lang="ru-KZ">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <meta name="theme-color" content="#f7f5f0" />
+    <meta name="format-detection" content="telephone=no" />
+    {noindex && <meta name="robots" content="noindex, follow" />}
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={site.name} />
+    <meta property="og:locale" content={site.locale} />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={fullTitle} />
+    <meta name="twitter:description" content={description} />
+
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/favicon.svg" />
+    <link rel="sitemap" href="/sitemap.xml" />
+
+    {schemas.map((item) => <script type="application/ld+json" set:html={JSON.stringify(item)} />)}
+  </head>
+  <body data-page-audience={audience ?? ''}>
+    <a class="skip-link" href="#main">Перейти к содержимому</a>
+    <Header audience={audience} />
+    <main id="main">
+      <slot />
+    </main>
+    <Footer />
+
+    <script>
+      // Меню на мобильных
+      const toggle = document.querySelector('[data-menu-toggle]');
+      const menu = document.querySelector<HTMLElement>('#mobile-menu');
+      if (toggle && menu) {
+        toggle.addEventListener('click', () => {
+          const open = menu.dataset.open === 'true';
+          menu.dataset.open = String(!open);
+          toggle.setAttribute('aria-expanded', String(!open));
+        });
+      }
+
+      // Запоминаем выбранную аудиторию
+      const AUD_KEY = 'polis:audience';
+      document.querySelectorAll<HTMLAnchorElement>('[data-audience-link]').forEach((link) => {
+        link.addEventListener('click', () => {
+          const value = link.dataset.audienceLink;
+          if (value) {
+            try {
+              localStorage.setItem(AUD_KEY, value);
+            } catch {
+              /* localStorage может быть недоступен */
+            }
+          }
+        });
+      });
+
+      const pageAudience = document.body.dataset.pageAudience;
+      if (!pageAudience) {
+        try {
+          const saved = localStorage.getItem(AUD_KEY);
+          if (saved === 'individual' || saved === 'business') {
+            document.querySelectorAll<HTMLAnchorElement>('[data-audience-link]').forEach((link) => {
+              if (link.dataset.audienceLink === saved) link.setAttribute('aria-current', 'true');
+              else link.removeAttribute('aria-current');
+            });
+          }
+        } catch {
+          /* ignore */
+        }
+      }
+    </script>
+  </body>
+</html>

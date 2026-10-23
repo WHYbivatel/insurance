@@ -1,0 +1,213 @@
+---
+import OfferCard from './OfferCard.astro';
+import Icon from './Icon.astro';
+import { companies } from '../data/companies';
+import { categoryById } from '../data/categories';
+import { purchaseLabels, obligationLabels, type Audience, type Offer, type PurchaseMethod } from '../data/types';
+
+interface Props {
+  offers: Offer[];
+  audience: Audience;
+}
+
+const { offers } = Astro.props;
+
+const usedCompanies = companies.filter((company) => offers.some((o) => o.companyId === company.id));
+const methods = Array.from(new Set(offers.map((o) => o.purchase.method))) as PurchaseMethod[];
+const obligations = Array.from(
+  new Set(offers.map((o) => categoryById(o.categoryId)?.obligation.status).filter(Boolean))
+) as ('required' | 'voluntary' | 'conditional')[];
+
+const plural = (n: number) => {
+  const mod10 = n % 10;
+  const mod100 = n % 100;
+  if (mod10 === 1 && mod100 !== 11) return 'предложение';
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return 'предложения';
+  return 'предложений';
+};
+---
+
+<section class="catalog" data-catalog>
+  <aside class="filters" id="catalog-filters" data-filters aria-label="Фильтры каталога">
+    <div class="filters__head">
+      <span class="filters__title">Фильтры</span>
+      <button class="filters__reset" type="button" data-reset>Сбросить</button>
+    </div>
+
+    <div class="filters__group">
+      <p class="filters__label">Компания</p>
+      {usedCompanies.map((company) => (
+        <label class="check">
+          <input type="checkbox" name="company" value={company.id} data-filter="company" />
+          <span>{company.name}</span>
+          <em>{offers.filter((o) => o.companyId === company.id).length}</em>
+        </label>
+      ))}
+    </div>
+
+    <div class="filters__group">
+      <p class="filters__label">Способ оформления</p>
+      {methods.map((method) => (
+        <label class="check">
+          <input type="checkbox" name="method" value={method} data-filter="method" />
+          <span>{purchaseLabels[method]}</span>
+          <em>{offers.filter((o) => o.purchase.method === method).length}</em>
+        </label>
+      ))}
+    </div>
+
+    <div class="filters__group">
+      <p class="filters__label">Обязательность</p>
+      {obligations.map((status) => (
+        <label class="check">
+          <input type="checkbox" name="obligation" value={status} data-filter="obligation" />
+          <span>{obligationLabels[status]}</span>
+          <em>{offers.filter((o) => categoryById(o.categoryId)?.obligation.status === status).length}</em>
+        </label>
+      ))}
+    </div>
+  </aside>
+
+  <div class="catalog__main">
+    <div class="catalog__toolbar">
+      <p class="catalog__count" data-count aria-live="polite">
+        Найдено <strong>{offers.length}</strong> {plural(offers.length)}
+      </p>
+      <button class="btn btn--secondary catalog__mobile-filter" type="button" data-filter-toggle aria-expanded="false" aria-controls="catalog-filters">
+        <Icon name="filter" size={17} />
+        Фильтры
+      </button>
+    </div>
+
+    <div class="search" style="margin-bottom:18px;box-shadow:none">
+      <Icon name="search" size={18} class="search__icon" />
+      <label class="sr-only" for="catalog-search">Поиск по каталогу</label>
+      <input class="search__input" id="catalog-search" type="search" placeholder="Поиск по названию, компании или покрытию" data-catalog-search />
+    </div>
+
+    <div class="results" data-results>
+      {offers.map((offer) => {
+        const obligation = categoryById(offer.categoryId)?.obligation.status ?? 'voluntary';
+        const text = [
+          offer.title,
+          offer.tagline,
+          offer.description,
+          companies.find((c) => c.id === offer.companyId)?.name ?? '',
+          categoryById(offer.categoryId)?.title ?? '',
+          ...offer.coverage,
+        ]
+          .join(' ')
+          .toLowerCase();
+
+        return (
+          <div
+            class="results__item"
+            data-offer-card
+            data-company={offer.companyId}
+            data-method={offer.purchase.method}
+            data-obligation={obligation}
+            data-text={text}
+          >
+            <OfferCard offer={offer} />
+          </div>
+        );
+      })}
+
+      <div class="empty-state" data-empty hidden>
+        <h3>Ничего не найдено</h3>
+        <p>Попробуйте изменить запрос или сбросить фильтры — в каталоге могут быть предложения с другим способом оформления.</p>
+        <button class="btn btn--primary" type="button" data-reset>Сбросить фильтры</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  const root = document.querySelector<HTMLElement>('[data-catalog]');
+  if (root) {
+    const cards = Array.from(root.querySelectorAll<HTMLElement>('[data-offer-card]'));
+    const search = root.querySelector<HTMLInputElement>('[data-catalog-search]');
+    const count = root.querySelector<HTMLElement>('[data-count]');
+    const empty = root.querySelector<HTMLElement>('[data-empty]');
+    const checks = Array.from(root.querySelectorAll<HTMLInputElement>('[data-filter]'));
+    const resetButtons = Array.from(root.querySelectorAll<HTMLButtonElement>('[data-reset]'));
+    const filterToggle = root.querySelector<HTMLButtonElement>('[data-filter-toggle]');
+    const filters = root.querySelector<HTMLElement>('[data-filters]');
+
+    const plural = (n: number) => {
+      const mod10 = n % 10;
+      const mod100 = n % 100;
+      if (mod10 === 1 && mod100 !== 11) return 'предложение';
+      if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return 'предложения';
+      return 'предложений';
+    };
+
+    const selected = (name: string) =>
+      checks.filter((c) => c.dataset.filter === name && c.checked).map((c) => c.value);
+
+    const normalize = (value: string) => value.toLowerCase().replace(/ё/g, 'е').trim();
+
+    const apply = (updateUrl = true) => {
+      const q = normalize(search?.value ?? '');
+      const company = selected('company');
+      const method = selected('method');
+      const obligation = selected('obligation');
+
+      let visible = 0;
+      for (const card of cards) {
+        const matchesQuery = !q || normalize(card.dataset.text ?? '').includes(q);
+        const matchesCompany = company.length === 0 || company.includes(card.dataset.company ?? '');
+        const matchesMethod = method.length === 0 || method.includes(card.dataset.method ?? '');
+        const matchesObligation = obligation.length === 0 || obligation.includes(card.dataset.obligation ?? '');
+        const show = matchesQuery && matchesCompany && matchesMethod && matchesObligation;
+        card.hidden = !show;
+        if (show) visible += 1;
+      }
+
+      if (count) count.innerHTML = `Найдено <strong>${visible}</strong> ${plural(visible)}`;
+      if (empty) empty.hidden = visible !== 0;
+
+      if (updateUrl) {
+        const params = new URLSearchParams();
+        if (q) params.set('q', search?.value.trim() ?? '');
+        if (company.length) params.set('company', company.join(','));
+        if (method.length) params.set('method', method.join(','));
+        if (obligation.length) params.set('obligation', obligation.join(','));
+        const next = `${location.pathname}${params.toString() ? `?${params}` : ''}`;
+        history.replaceState(null, '', next);
+      }
+    };
+
+    const params = new URLSearchParams(location.search);
+    const q = params.get('q');
+    if (q && search) search.value = q;
+    for (const name of ['company', 'method', 'obligation']) {
+      const values = (params.get(name) ?? '').split(',').filter(Boolean);
+      checks.forEach((c) => {
+        if (c.dataset.filter === name && values.includes(c.value)) c.checked = true;
+      });
+    }
+
+    checks.forEach((c) => c.addEventListener('change', () => apply()));
+    search?.addEventListener('input', () => apply());
+
+    resetButtons.forEach((button) =>
+      button.addEventListener('click', () => {
+        checks.forEach((c) => (c.checked = false));
+        if (search) search.value = '';
+        apply();
+        if (filters) filters.dataset.open = 'false';
+        filterToggle?.setAttribute('aria-expanded', 'false');
+      })
+    );
+
+    filterToggle?.addEventListener('click', () => {
+      if (!filters) return;
+      const open = filters.dataset.open === 'true';
+      filters.dataset.open = String(!open);
+      filterToggle.setAttribute('aria-expanded', String(!open));
+    });
+
+    apply(false);
+  }
+</script>

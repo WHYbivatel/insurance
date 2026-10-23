@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <rect width="1200" height="630" fill="#F7F5F0"/>
+  <circle cx="1010" cy="120" r="260" fill="#E6EFE7"/>
+  <circle cx="180" cy="560" r="220" fill="#F2E9DA"/>
+  <g transform="translate(80,84)">
+    <rect width="52" height="52" rx="15" fill="#0F5138"/>
+    <path d="M26 10l12 5.2v8.7c0 8.2-5.1 14.3-12 17.4-6.9-3.1-12-9.2-12-17.4v-8.7L26 10z" fill="rgba(255,255,255,0.12)" stroke="#fff" stroke-width="2"/>
+    <path d="M20 26l4 4 8-8" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="70" y="26" font-family="Manrope, Arial, sans-serif" font-size="26" font-weight="800" fill="#17201B">Полис</text>
+    <text x="70" y="46" font-family="Manrope, Arial, sans-serif" font-size="12" letter-spacing="1.6" fill="#5D6A62">СТРАХОВАНИЕ В КАЗАХСТАНЕ</text>
+  </g>
+  <text x="80" y="270" font-family="Manrope, Arial, sans-serif" font-size="60" font-weight="800" fill="#17201B">Найдите подходящую</text>
+  <text x="80" y="342" font-family="Manrope, Arial, sans-serif" font-size="60" font-weight="800" fill="#17201B">страховку в Казахстане</text>
+  <text x="80" y="398" font-family="Manrope, Arial, sans-serif" font-size="24" fill="#5D6A62">Понятные условия, проверенные предложения</text>
+  <text x="80" y="432" font-family="Manrope, Arial, sans-serif" font-size="24" fill="#5D6A62">и переход к оформлению у страховщика</text>
+  <g transform="translate(80,490)">
+    <rect width="190" height="44" rx="22" fill="#0F5138"/>
+    <text x="95" y="28" text-anchor="middle" font-family="Manrope, Arial, sans-serif" font-size="16" font-weight="700" fill="#fff">Для себя</text>
+    <rect x="206" width="210" height="44" rx="22" fill="#fff" stroke="#D3CFC2"/>
+    <text x="311" y="28" text-anchor="middle" font-family="Manrope, Arial, sans-serif" font-size="16" font-weight="700" fill="#17201B">Для бизнеса</text>
+  </g>
+</svg>

@@ -1,0 +1,104 @@
+---
+import Base from '../../layouts/Base.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
+import Icon from '../../components/Icon.astro';
+import CatalogBrowser from '../../components/CatalogBrowser.astro';
+import Faq from '../../components/Faq.astro';
+import { categoriesByAudience } from '../../data/categories';
+import { obligationShort } from '../../data/types';
+import { offersByAudience, publishedOffers } from '../../data/products';
+
+const cats = categoriesByAudience('individual');
+const offers = offersByAudience('individual');
+
+const faq = [
+  {
+    q: 'С чего начать, если я не знаю, какая страховка нужна?',
+    a: 'Начните с задачи: обязательная автогражданка, защита своего автомобиля, квартира, поездка или здоровье. В каждом разделе есть объяснение и примеры ситуаций.',
+  },
+  {
+    q: 'Можно ли оформить полис здесь?',
+    a: 'Нет. Каталог помогает выбрать и объясняет условия, а оформление происходит на сайте страховщика, по телефону или в отделении. Кнопка на карточке ведёт на официальный источник.',
+  },
+  {
+    q: 'Почему в каталоге нет моего города или компании?',
+    a: 'Каталог наполняется постепенно и только проверенными предложениями. Если продукт или компанию не удалось подтвердить по официальному источнику, мы не добавляем их.',
+  },
+  {
+    q: 'Цены в каталоге окончательные?',
+    a: 'Нет. Мы показываем цену только там, где она подтверждена, и всегда указываем, если стоимость рассчитывается индивидуально. Итоговую премию определяет страховщик по договору.',
+  },
+];
+---
+
+<Base
+  title="Страхование для себя"
+  description="Каталог страхования для физических лиц в Казахстане: ОГПО ВТС, КАСКО, квартира, здоровье, поездки и накопительные программы. Объяснения и проверенные предложения компаний."
+  audience="individual"
+>
+  <div class="container">
+    <Breadcrumbs items={[{ label: 'Главная', href: '/' }, { label: 'Для себя' }]} />
+
+    <div class="page-head">
+      <span class="eyebrow">Частным лицам</span>
+      <h1 class="page-head__title">Страхование для себя</h1>
+      <p class="page-head__lead">
+        Семь разделов о том, что и от чего защищает: автомобиль, квартира, здоровье, поездки
+        и долгосрочные программы. В каждом — объяснение, отличия от похожих продуктов
+        и предложения страховщиков с указанием источника.
+      </p>
+      <div class="meta-row" style="margin-top:16px">
+        <span class="chip chip--brand">{offers.length} проверенных предложений</span>
+        <span class="chip">6 страховщиков</span>
+        <a class="chip chip--outline" href="/dlya-biznesa/">Перейти в раздел для бизнеса →</a>
+      </div>
+    </div>
+
+    <section aria-labelledby="cats-title" style="padding-bottom:34px">
+      <h2 id="cats-title" class="sr-only">Разделы страхования для частных лиц</h2>
+      <div class="grid grid--4">
+        {cats.map((cat) => {
+          const count = publishedOffers.filter((o) => o.categoryId === cat.id).length;
+          return (
+            <a class="card card--hover cat-card" href={`/dlya-sebya/${cat.slug}/`}>
+              <span class={`cat-card__icon tint-${cat.tint}`}><Icon name={cat.icon} size={22} /></span>
+              <span class="cat-card__title">{cat.navTitle}</span>
+              <span class="cat-card__text">{cat.short}</span>
+              <span class="cat-card__meta">
+                <span>{obligationShort[cat.obligation.status]}</span>
+                <strong>{count} предл.</strong>
+              </span>
+            </a>
+          );
+        })}
+      </div>
+    </section>
+
+    <hr class="divider" />
+
+    <section class="section" aria-labelledby="all-title">
+      <div class="section-head">
+        <div>
+          <span class="eyebrow">Каталог</span>
+          <h2 id="all-title">Все предложения для частных лиц</h2>
+          <p>Фильтруйте по компании, способу оформления и обязательности. Ссылки ведут на страницы продуктов у страховщиков.</p>
+        </div>
+      </div>
+      <CatalogBrowser offers={offers} audience="individual" />
+    </section>
+  </div>
+
+  <div class="container">
+    <Faq items={faq} title="Вопросы о выборе" />
+  </div>
+
+  <section class="section section--tight">
+    <div class="container">
+      <div class="note">
+        Окончательные условия страхования определяет договор страховщика. Информация в каталоге
+        носит справочный характер: перед оформлением проверьте покрытие, исключения, франшизу
+        и порядок выплаты на сайте компании.
+      </div>
+    </div>
+  </section>
+</Base>

@@ -1,0 +1,128 @@
+---
+import Base from '../../layouts/Base.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
+import Icon from '../../components/Icon.astro';
+import { companies } from '../../data/companies';
+import { offersByCompany, categoryTitle } from '../../data/products';
+import { purchaseShort } from '../../data/types';
+
+export function getStaticPaths() {
+  return companies.map((company) => ({ params: { slug: company.slug }, props: { company } }));
+}
+
+const { company } = Astro.props;
+const offers = offersByCompany(company.id);
+const individual = offers.filter((o) => o.audience === 'individual');
+const business = offers.filter((o) => o.audience === 'business');
+const host = new URL(company.site).host.replace(/^www\./, '');
+---
+
+<Base
+  title={`${company.name} — страховая компания`}
+  description={`${company.summary} Продукты ${company.name} в каталоге «Полис»: ${offers.length} предложений с официальными ссылками.`}
+>
+  <div class="container">
+    <Breadcrumbs
+      items={[
+        { label: 'Главная', href: '/' },
+        { label: 'Компании', href: '/kompanii/' },
+        { label: company.name },
+      ]}
+    />
+
+    <header class="company-head">
+      <span class="company-head__mono" style={`background:${company.accent}`} aria-hidden="true">
+        {company.name.charAt(0)}
+      </span>
+      <div style="flex:1">
+        <span class="eyebrow">Страховщик</span>
+        <h1 style="margin-top:6px;font-size:clamp(1.8rem,3vw,2.5rem)">{company.name}</h1>
+        <p class="small muted" style="margin-top:6px">{company.legalName} · {company.city}</p>
+        <p class="page-head__lead" style="margin-top:12px;font-size:0.96rem">{company.summary}</p>
+        <div class="meta-row" style="margin-top:14px">
+          <a class="btn btn--secondary" href={company.site} target="_blank" rel="noopener noreferrer nofollow">
+            Официальный сайт: {host}
+            <Icon name="external" size={14} />
+          </a>
+          <span class="chip">{offers.length} предложений в каталоге</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="grid grid--2" style="margin-top:26px">
+      <section class="info-block">
+        <h2>Что известно о компании</h2>
+        <ul class="bullet-list">
+          {company.facts.map((fact) => <li>{fact}</li>)}
+        </ul>
+        {company.note && <p class="small muted" style="margin-top:14px">{company.note}</p>}
+      </section>
+
+      <section class="info-block">
+        <h2>Как мы проверяли</h2>
+        <p class="small muted" style="line-height:1.65">
+          Сведения о компании и продуктах взяты с официального сайта страховщика. Мы не
+          публикуем данные о лицензиях, рейтингах и партнёрствах, если их нет в открытом
+          официальном источнике. Наличие продукта в каталоге не означает партнёрства с сервисом.
+        </p>
+        <div class="source-box" style="margin-top:16px">
+          <span>Источник: <strong>{host}</strong></span>
+          <a class="link-arrow" href={company.site} target="_blank" rel="noopener noreferrer nofollow">
+            Открыть сайт <Icon name="arrow-up-right" size={14} />
+          </a>
+        </div>
+      </section>
+    </div>
+
+    <section class="section" aria-labelledby="products-title">
+      <div class="section-head">
+        <div>
+          <span class="eyebrow">Продукты</span>
+          <h2 id="products-title">Предложения в каталоге</h2>
+          <p>Сгруппированы по аудитории. Откройте продукт, чтобы увидеть покрытие, ограничения и способ оформления.</p>
+        </div>
+      </div>
+
+      {offers.length === 0 && (
+        <div class="empty-state">
+          <h3>Пока нет проверенных предложений</h3>
+          <p>Мы не добавляем продукты без подтверждения на официальном сайте.</p>
+        </div>
+      )}
+
+      {individual.length > 0 && (
+        <div style="margin-bottom:28px">
+          <h3 style="font-size:1rem;margin-bottom:12px">Для себя <span class="muted" style="font-weight:600">{individual.length}</span></h3>
+          <div class="company-list">
+            {individual.map((offer) => (
+              <a class="company-row" href={`/predlozhenie/${offer.slug}/`}>
+                <span class="company-row__text">
+                  <span class="company-row__name">{offer.title}</span>
+                  <span class="company-row__meta">{categoryTitle(offer.categoryId)} · {purchaseShort[offer.purchase.method]} · {offer.price.text}</span>
+                </span>
+                <Icon name="arrow" size={18} />
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {business.length > 0 && (
+        <div>
+          <h3 style="font-size:1rem;margin-bottom:12px">Для бизнеса <span class="muted" style="font-weight:600">{business.length}</span></h3>
+          <div class="company-list">
+            {business.map((offer) => (
+              <a class="company-row" href={`/predlozhenie/${offer.slug}/`}>
+                <span class="company-row__text">
+                  <span class="company-row__name">{offer.title}</span>
+                  <span class="company-row__meta">{categoryTitle(offer.categoryId)} · {purchaseShort[offer.purchase.method]} · {offer.price.text}</span>
+                </span>
+                <Icon name="arrow" size={18} />
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+    </section>
+  </div>
+</Base>

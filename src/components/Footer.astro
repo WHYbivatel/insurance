@@ -1,0 +1,70 @@
+---
+import { site } from '../data/site';
+import { categoriesByAudience } from '../data/categories';
+
+const year = new Date().getFullYear();
+const individual = categoriesByAudience('individual').slice(0, 4);
+const business = categoriesByAudience('business').slice(0, 4);
+---
+
+<footer class="footer">
+  <div class="container">
+    <div class="footer__grid">
+      <div class="footer__about">
+        <a class="logo" href="/" aria-label="Полис — на главную">
+          <span class="logo__mark">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M12 2.6l7.4 3.2v5.1c0 4.8-3.1 8.5-7.4 10.5-4.3-2-7.4-5.7-7.4-10.5V5.8L12 2.6z" fill="rgba(255,255,255,0.14)" stroke="#fff" stroke-width="1.5" />
+              <path d="M8.6 12.1l2.3 2.3 4.6-4.6" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </span>
+          <span class="logo__text">
+            <span class="logo__name">Полис</span>
+            <span class="logo__tag">страхование в Казахстане</span>
+          </span>
+        </a>
+        <p>
+          Независимый каталог страхования: объясняем виды страхования, показываем предложения
+          страховых компаний и ведём к оформлению на официальном сайте страховщика.
+        </p>
+      </div>
+
+      <div class="footer__col">
+        <h3>Для себя</h3>
+        <ul>
+          {individual.map((c) => (
+            <li><a href={`/dlya-sebya/${c.slug}/`}>{c.navTitle}</a></li>
+          ))}
+        </ul>
+      </div>
+
+      <div class="footer__col">
+        <h3>Для бизнеса</h3>
+        <ul>
+          {business.map((c) => (
+            <li><a href={`/dlya-biznesa/${c.slug}/`}>{c.navTitle}</a></li>
+          ))}
+        </ul>
+      </div>
+
+      <div class="footer__col">
+        <h3>Сервис</h3>
+        <ul>
+          <li><a href="/kompanii/">Страховые компании</a></li>
+          <li><a href="/o-servise/">О сервисе</a></li>
+          <li><a href="/o-servise/#proverka">Как мы проверяем данные</a></li>
+          <li><a href="/o-servise/#contacts">Связаться</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer__bottom">
+      <p class="footer__disclaimer">
+        © {year} {site.name}. Сервис не является страховщиком, страховым агентом или брокером и не
+        заключает договоры страхования. Оформление, оплата и урегулирование — у страховой компании.
+        Итоговые условия определяет договор страховщика.
+      </p>
+      <p>Данные каталога проверены {new Date(site.updatedAt).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+    </div>
+  </div>
+</footer>

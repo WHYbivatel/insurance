@@ -1,0 +1,80 @@
+---
+import Icon from './Icon.astro';
+import CompanyMark from './CompanyMark.astro';
+import { categoryTitle } from '../data/products';
+import { purchaseShort, purchaseLabels, type Offer } from '../data/types';
+
+interface Props {
+  offer: Offer;
+  audienceLabel?: string;
+}
+
+const { offer, audienceLabel } = Astro.props;
+
+const priceShort =
+  offer.price.kind === 'individual'
+    ? 'Индивидуально'
+    : offer.price.kind === 'calculated'
+      ? 'Расчёт у страховщика'
+      : offer.price.text;
+
+const shortCta =
+  offer.purchase.method === 'online'
+    ? 'Оформить'
+    : offer.purchase.method === 'partner'
+      ? 'Перейти'
+      : offer.purchase.method === 'request'
+        ? 'Заявка'
+        : 'Связаться';
+
+const host = (() => {
+  try {
+    return new URL(offer.purchase.url).host.replace(/^www\./, '');
+  } catch {
+    return '';
+  }
+})();
+---
+
+<article class="card card--hover offer-card">
+  <div class="offer-card__head">
+    <CompanyMark companyId={offer.companyId} />
+    {offer.badge && <span class="chip chip--brand">{offer.badge}</span>}
+  </div>
+
+  <h3 class="offer-card__title">
+    <a href={`/predlozhenie/${offer.slug}/`}>{offer.title}</a>
+  </h3>
+  <p class="offer-card__desc">{offer.tagline}</p>
+
+  <div class="chip-row">
+    <span class="chip">{categoryTitle(offer.categoryId)}</span>
+    {audienceLabel && <span class="chip chip--outline">{audienceLabel}</span>}
+  </div>
+
+  <dl class="offer-card__facts">
+    <div class="offer-card__fact">
+      <dt>Оформление</dt>
+      <dd>{purchaseLabels[offer.purchase.method]}</dd>
+    </div>
+    <div class="offer-card__fact">
+      <dt>Цена</dt>
+      <dd>{priceShort}</dd>
+    </div>
+  </dl>
+
+  <div class="offer-card__actions">
+    <a class="btn btn--ghost" href={`/predlozhenie/${offer.slug}/`}>Подробнее</a>
+    <a
+      class="btn btn--primary"
+      href={offer.purchase.url}
+      target="_blank"
+      rel="noopener noreferrer nofollow"
+      aria-label={`${offer.purchase.ctaLabel} — ${host} (откроется в новой вкладке)`}
+    >
+      {shortCta}
+      <Icon name="external" size={14} />
+    </a>
+  </div>
+  <p class="tiny" style="margin-top:-4px">Переход на {host} · {purchaseShort[offer.purchase.method].toLowerCase()}</p>
+</article>

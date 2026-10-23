@@ -1,0 +1,201 @@
+---
+import Base from '../layouts/Base.astro';
+import Breadcrumbs from './Breadcrumbs.astro';
+import Icon from './Icon.astro';
+import CatalogBrowser from './CatalogBrowser.astro';
+import Faq from './Faq.astro';
+import { categoryById } from '../data/categories';
+import { offersByCategory, audienceCount } from '../data/products';
+import { purchaseLabels, obligationShort } from '../data/types';
+import type { Category } from '../data/types';
+
+interface Props {
+  category: Category;
+}
+
+const { category } = Astro.props;
+const audience = category.audience;
+const offers = offersByCategory(audience, category.id);
+const basePath = audience === 'individual' ? '/dlya-sebya' : '/dlya-biznesa';
+const audienceLabel = audience === 'individual' ? 'Для себя' : 'Для бизнеса';
+const related = category.related
+  .map((id) => categoryById(id))
+  .filter((c): c is Category => Boolean(c) && c!.audience === audience);
+
+const methods = Array.from(new Set(offers.map((o) => purchaseLabels[o.purchase.method])));
+
+const schema = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Главная', item: '/' },
+      { '@type': 'ListItem', position: 2, name: audienceLabel, item: `${basePath}/` },
+      { '@type': 'ListItem', position: 3, name: category.navTitle, item: `${basePath}/${category.slug}/` },
+    ],
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    name: category.title,
+    description: category.short,
+    inLanguage: 'ru-KZ',
+  },
+];
+---
+
+<Base title={category.title} description={category.short} audience={audience} schema={schema}>
+  <div class="container">
+    <Breadcrumbs
+      items={[
+        { label: 'Главная', href: '/' },
+        { label: audienceLabel, href: `${basePath}/` },
+        { label: category.navTitle },
+      ]}
+    />
+
+    <div class="cat-hero">
+      <div>
+        <span class={`cat-hero__icon tint-${category.tint}`}><Icon name={category.icon} size={26} /></span>
+        <span class="eyebrow">{audienceLabel} · {category.groupTitle}</span>
+        <h1 style="margin-top:12px">{category.title}</h1>
+        <p class="page-head__lead">{category.lead}</p>
+        <div class="meta-row" style="margin-top:18px">
+          <span class={`chip ${category.obligation.status === 'required' ? 'chip--warn' : 'chip--brand'}`}>
+            {obligationShort[category.obligation.status]}
+          </span>
+          <span class="chip">{offers.length} предложений</span>
+          {methods.slice(0, 2).map((method) => <span class="chip chip--outline">{method}</span>)}
+        </div>
+      </div>
+
+      <aside class="fact-panel" aria-label="Коротко о разделе">
+        <p class="fact-panel__title">Коротко</p>
+        <div class="fact-list">
+          <div class="fact-list__item">
+            <Icon name="check" size={16} />
+            <span><strong>Кому:</strong> {category.whoFor[0]}</span>
+          </div>
+          <div class="fact-list__item">
+            <Icon name="shield-check" size={16} />
+            <span><strong>Обязательность:</strong> {category.obligation.label.toLowerCase()}</span>
+          </div>
+          <div class="fact-list__item">
+            <Icon name="doc" size={16} />
+            <span><strong>В каталоге:</strong> {offers.length} проверенных предложений</span>
+          </div>
+          <div class="fact-list__item">
+            <Icon name="external" size={16} />
+            <span><strong>Оформление:</strong> у страховщика</span>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <div class="grid grid--2" style="margin-top:30px">
+      <section class="info-block" aria-labelledby="who-title">
+        <h2 id="who-title">Кому подходит</h2>
+        <ul class="bullet-list">
+          {category.whoFor.map((item) => <li>{item}</li>)}
+        </ul>
+      </section>
+
+      <section class="info-block" aria-labelledby="risks-title">
+        <h2 id="risks-title">Основные риски</h2>
+        <ul class="bullet-list">
+          {category.risks.map((item) => <li>{item}</li>)}
+        </ul>
+      </section>
+    </div>
+
+    <section style="margin-top:16px" aria-labelledby="obligation-title">
+      <div class="obligation">
+        <Icon name="info" size={19} />
+        <div>
+          <strong id="obligation-title">{category.obligation.label}</strong>
+          {category.obligation.text}
+        </div>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="diff-title">
+      <div class="section-head">
+        <div>
+          <span class="eyebrow">Разобраться</span>
+          <h2 id="diff-title">Чем отличается от похожих продуктов</h2>
+        </div>
+      </div>
+      <div class="diff-grid">
+        {category.differences.map((item) => (
+          <div class="diff-card">
+            <h3>{item.title}</h3>
+            <p>{item.text}</p>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <section class="section section--tight" aria-labelledby="offers-title" style="padding-top:0">
+      <div class="section-head">
+        <div>
+          <span class="eyebrow">Предложения</span>
+          <h2 id="offers-title">{offers.length} предложений в разделе</h2>
+          <p>Сравните покрытие, способ оформления и компанию. Каждая карточка ведёт на подробное описание и официальный источник.</p>
+        </div>
+      </div>
+
+      {offers.length > 0 ? (
+        <CatalogBrowser offers={offers} audience={audience} />
+      ) : (
+        <div class="empty-state">
+          <h3>Пока нет подтверждённых предложений</h3>
+          <p>
+            Мы не заполняем раздел выдуманными продуктами. Если для этого вида страхования
+            не удалось подтвердить действующее предложение, он остаётся справочным.
+          </p>
+          <a class="btn btn--primary" href={`${basePath}/`}>Вернуться в каталог</a>
+        </div>
+      )}
+    </section>
+  </div>
+
+  <div class="container">
+    <Faq items={category.faq} title="Вопросы по этому виду страхования" />
+  </div>
+
+  {related.length > 0 && (
+    <section class="section section--tight">
+      <div class="container">
+        <div class="section-head">
+          <div>
+            <span class="eyebrow">Смотрите также</span>
+            <h2>Связанные разделы</h2>
+          </div>
+        </div>
+        <div class="grid grid--3">
+          {related.map((cat) => (
+            <a class="card card--hover cat-card" href={`${basePath}/${cat.slug}/`} style="min-height:auto">
+              <span class={`cat-card__icon tint-${cat.tint}`}><Icon name={cat.icon} size={22} /></span>
+              <span class="cat-card__title">{cat.navTitle}</span>
+              <span class="cat-card__text">{cat.short}</span>
+              <span class="cat-card__meta">
+                <span>{cat.obligation.label}</span>
+                <strong>Открыть →</strong>
+              </span>
+            </a>
+          ))}
+        </div>
+      </div>
+    </section>
+  )}
+
+  <section class="section section--tight">
+    <div class="container">
+      <div class="note">
+        Информация в разделе объясняет вид страхования в целом. Условия конкретного продукта
+        могут отличаться: проверяйте покрытие, исключения и лимиты в договоре страховщика.
+        Всего в каталоге {audienceCount(audience)} предложений для этой аудитории.
+      </div>
+    </div>
+  </section>
+</Base>

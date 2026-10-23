@@ -1,0 +1,26 @@
+---
+import { companyById } from '../data/companies';
+
+interface Props {
+  companyId: string;
+  size?: 'sm' | 'md';
+  showName?: boolean;
+}
+
+const { companyId, size = 'sm', showName = true } = Astro.props;
+const company = companyById(companyId);
+if (!company) throw new Error(`Неизвестная компания: ${companyId}`);
+const mono = company.name.trim().charAt(0).toUpperCase();
+const dimension = size === 'md' ? 42 : 32;
+---
+
+<span class="company-mark">
+  <span
+    class="company-mark__mono"
+    style={`background:${company.accent};width:${dimension}px;height:${dimension}px;font-size:${size === 'md' ? '1rem' : '0.82rem'}`}
+    aria-hidden="true"
+  >
+    {mono}
+  </span>
+  {showName && <span class="company-mark__name">{company.name}</span>}
+</span>
