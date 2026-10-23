@@ -1,0 +1,24 @@
+{
+  "name": "polis-kz",
+  "type": "module",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Полис — каталог страхования Казахстана",
+  "scripts": {
+    "dev": "astro dev",
+    "start": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "check": "astro check",
+    "verify:links": "node scripts/verify-links.mjs",
+    "verify:internal": "node scripts/verify-links.mjs --internal"
+  },
+  "dependencies": {
+    "@fontsource-variable/manrope": "^5.2.5",
+    "astro": "^5.14.1"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.4",
+    "typescript": "^5.9.2"
+  }
+}
