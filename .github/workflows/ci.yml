@@ -1,0 +1,100 @@
+name: CI
+
+# Проверка сборки на pull request и на push в main.
+# Отдельного шага публикации здесь нет: workflow только собирает сайт
+# и складывает результат в артефакт. Как включить автопубликацию —
+# см. раздел «CI и публикация» в README.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+# Параллельные запуски на одну ветку отменяют предыдущий незавершённый:
+# экономит минуты и не даёт двум сборкам одновременно писать артефакт.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Сборка и проверки
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Получить репозиторий
+        uses: actions/checkout@v4
+        with:
+          # Полная история нужна, чтобы получить SHA коммита для buildId.
+          fetch-depth: 0
+
+      - name: Установить Node.js
+        uses: actions/setup-node@v4
+        with:
+          # Astro 7 требует Node >= 22.23.4, поэтому фиксируем 22.x.
+          node-version: '22'
+          cache: npm
+
+      - name: Установить зависимости
+        run: npm ci
+
+      - name: Проверить типы и разметку
+        run: npm run check
+
+      - name: Собрать сайт
+        run: npm run build
+
+      - name: Регрессионные проверки
+        run: node scripts/regression-tests.mjs
+
+      - name: Проверить внутренние ссылки
+        run: npm run verify:internal
+
+      - name: Показать сведения о сборке
+        run: npm run version:info
+
+      - name: Сохранить результат сборки
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-${{ github.sha }}
+          path: dist/
+          retention-days: 14
+          if-no-files-found: error
+
+  # Внешние сайты страховщиков проверяются отдельным job'ом и не блокируют
+  # сборку: недоступность чужого сайта из сети GitHub — не наша ошибка.
+  external-links:
+    name: Внешние ссылки (не блокирует)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    continue-on-error: true
+    needs: build
+
+    steps:
+      - name: Получить репозиторий
+        uses: actions/checkout@v4
+
+      - name: Установить Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Установить зависимости
+        run: npm ci
+
+      - name: Собрать сайт
+        run: npm run build
+
+      # --soft: скрипт различает «подтверждённо битую ссылку» (404/410)
+      # и «проверка недоступна» (таймаут, DNS, блокировка). Код возврата 1
+      # бывает только при подтверждённых 404/410, и даже тогда job не валит
+      # пайплайн — отчёт просто остаётся в логах.
+      - name: Проверить ссылки на сайты страховщиков
+        run: npm run verify:links:soft
