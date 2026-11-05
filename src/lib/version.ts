@@ -5,21 +5,36 @@
  * без кеша. При расхождении показываем одно уведомление с кнопкой
  * «Обновить» и оставляем ненавязчивый индикатор в подвале.
  *
- * Проверки: после загрузки, при возвращении на вкладку (не чаще раза в минуту)
- * и раз в 5 минут, только когда вкладка видима. Ошибки сети игнорируются:
+ * Проверки: после загрузки, при возвращении на вкладку (не чаще раза в 15 секунд)
+ * и раз в 30 секунд, только когда вкладка видима. Ошибки сети игнорируются:
  * сайт продолжает работать без сообщений.
  */
 
-import { toast } from './toast';
-
-const CHECK_INTERVAL_MS = 5 * 60 * 1000;
-const MIN_RETURN_GAP_MS = 60 * 1000;
+const CHECK_INTERVAL_MS = 30 * 1000;
+const MIN_RETURN_GAP_MS = 15 * 1000;
 const NOTIFIED_KEY = 'polis:update-notified';
 
 let currentBuildId = '';
 let lastCheck = 0;
 let notifiedBuild = '';
 let pendingBuild = '';
+let autoReloadTimer = 0;
+
+function scheduleReload(buildId: string): void {
+  if (autoReloadTimer) return;
+  try {
+    if (sessionStorage.getItem('polis:auto-reloaded') === buildId) return;
+  } catch { return; }
+  autoReloadTimer = window.setTimeout(() => {
+    autoReloadTimer = 0;
+    if (document.hidden || document.activeElement?.matches('input, textarea, select, [contenteditable="true"]')) {
+      scheduleReload(buildId);
+      return;
+    }
+    try { sessionStorage.setItem('polis:auto-reloaded', buildId); } catch { return; }
+    reload();
+  }, 8000);
+}
 
 function readBuildId(): string {
   const meta = document.querySelector<HTMLMetaElement>('meta[name="build-id"]');
@@ -73,20 +88,26 @@ function rememberNotified(buildId: string): void {
 }
 
 function notify(buildId: string): void {
+  markUpdateAvailable(buildId);
   if (alreadyNotified(buildId)) return;
   rememberNotified(buildId);
-  markUpdateAvailable(buildId);
 
-  toast.info('Доступна новая версия сайта', {
-    id: 'update',
-    description: 'Обновите страницу, чтобы получить актуальные данные каталога.',
-    duration: 12000,
-    action: {
-      label: 'Обновить',
-      onClick: reload,
-      closeOnClick: false,
-    },
-  });
+  void import('./toast')
+    .then(({ toast }) => {
+      toast.info('Доступна новая версия сайта', {
+        id: 'update',
+        description: 'Страница автоматически обновится через несколько секунд. Фильтры и позиция сохранятся.',
+        duration: 12000,
+        action: {
+          label: 'Обновить',
+          onClick: reload,
+          closeOnClick: false,
+        },
+      });
+    })
+    .catch(() => {
+      // Если чанк уведомлений не загрузился, индикатор обновления всё равно доступен.
+    });
 }
 
 async function check(): Promise<void> {
@@ -108,6 +129,7 @@ async function check(): Promise<void> {
     if (!data.buildId || data.buildId === currentBuildId) return;
 
     pendingBuild = data.buildId;
+    scheduleReload(data.buildId);
     notify(data.buildId);
   } catch {
     // Нет сети или version.json недоступен — молча ждём следующей проверки.

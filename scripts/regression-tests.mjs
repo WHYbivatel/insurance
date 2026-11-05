@@ -155,7 +155,8 @@ const kit = await read('ui-kit/index.html');
 check('ui-kit: закрыта от индексации', /name="robots" content="noindex/.test(kit));
 const sitemap = await read('sitemap.xml');
 check('sitemap: ui-kit не входит', !/ui-kit/.test(sitemap));
-check('robots.txt: ui-kit закрыт', /Disallow: \/ui-kit\//.test(await read('robots.txt')));
+const robots = await read('robots.txt');
+check('robots.txt: noindex-страницы можно проверить', !/Disallow: \/(?:poisk|ui-kit)\//.test(robots));
 
 /* ---------- Итог ---------- */
 for (const item of checks) {

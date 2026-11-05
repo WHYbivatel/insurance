@@ -21,6 +21,9 @@ concurrency:
 permissions:
   contents: read
 
+env:
+  PUBLIC_SITE_URL: https://strahovka.esl.kz
+
 jobs:
   build:
     name: Сборка и проверки
@@ -37,8 +40,7 @@ jobs:
       - name: Установить Node.js
         uses: actions/setup-node@v4
         with:
-          # Astro 7 требует Node >= 22.23.4. На раннере 22.x оказался 22.23.3,
-          # поэтому берём актуальный LTS 24 — он этому требованию удовлетворяет.
+          # Astro 7 требует Node >= 22.23.4; актуальная LTS 24 подходит.
           node-version: '24'
           cache: npm
 
@@ -48,11 +50,20 @@ jobs:
       - name: Проверить типы и разметку
         run: npm run check
 
+      - name: Проверить валидатор данных каталога
+        run: npm run test:data
+
       - name: Собрать сайт
         run: npm run build
 
       - name: Регрессионные проверки
         run: node scripts/regression-tests.mjs
+
+      - name: Установить Chromium для браузерных тестов
+        run: npx playwright install --with-deps chromium
+
+      - name: Браузерные проверки
+        run: npm run test:browser
 
       - name: Проверить внутренние ссылки
         run: npm run verify:internal

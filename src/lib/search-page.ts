@@ -13,6 +13,7 @@ interface IndexItem {
   url: string;
   type: string;
   text: string;
+  terms?: string[];
 }
 
 const GROUPS: { type: string; title: string }[] = [
@@ -21,7 +22,20 @@ const GROUPS: { type: string; title: string }[] = [
   { type: 'Компания', title: 'Компании' },
 ];
 
-const normalize = (value: string): string => value.toLowerCase().replace(/ё/g, 'е').trim();
+const normalize = (value: string): string => value
+  .toLowerCase()
+  .replace(/ё/g, 'е')
+  .replace(/[^\p{L}\p{N}]+/gu, ' ')
+  .trim();
+
+const scoreItem = (item: IndexItem, query: string): number => {
+  const title = normalize(item.title);
+  const terms = normalize(`${item.title} ${item.sub} ${item.text} ${item.type} ${(item.terms ?? []).join(' ')}`);
+  const words = query.split(/\s+/).filter(Boolean);
+  if (terms.includes(query)) return title === query ? 100 : title.startsWith(query) ? 80 : 60;
+  if (words.length > 1 && words.every((word) => terms.includes(word))) return 40 + words.length;
+  return words.length === 1 && terms.includes(words[0]) ? 20 : 0;
+};
 
 export function initSearchPage(): void {
   const input = document.querySelector<HTMLInputElement>('[data-global-input]');
@@ -80,9 +94,11 @@ export function initSearchPage(): void {
 
     if (hint) hint.hidden = true;
 
-    const matches = items.filter((item) =>
-      normalize(`${item.title} ${item.sub} ${item.text} ${item.type}`).includes(q)
-    );
+    const matches = items
+      .map((item) => ({ item, score: scoreItem(item, q) }))
+      .filter(({ score }) => score > 0)
+      .sort((a, b) => b.score - a.score)
+      .map(({ item }) => item);
 
     if (counter) {
       counter.hidden = false;
@@ -113,7 +129,7 @@ export function initSearchPage(): void {
 
       const rows = document.createElement('div');
       rows.className = 'company-list';
-      for (const item of list.slice(0, 40)) rows.append(makeRow(item));
+      for (const item of list) rows.append(makeRow(item));
 
       section.append(heading, rows);
       results.append(section);
@@ -133,5 +149,4 @@ export function initSearchPage(): void {
     history.replaceState(null, '', next);
   });
 
-  input.focus({ preventScroll: true });
 }

@@ -37,6 +37,7 @@ const searchText = (offer: Offer): string =>
     companies.find((c) => c.id === offer.companyId)?.name ?? '',
     categoryById(offer.categoryId)?.title ?? '',
     ...offer.coverage,
+    ...(offer.features ?? []),
   ]
     .join(' ')
     .toLowerCase();
@@ -50,6 +51,12 @@ const searchText = (offer: Offer): string =>
       <p class="catalog__count" data-count aria-live="polite">
         Найдено <strong>{offers.length}</strong> {plural(offers.length)}
       </p>
+      <label class="catalog__sort-label" for="catalog-sort">Сортировка
+        <select id="catalog-sort" class="catalog__sort" data-catalog-sort>
+          <option value="recommended">Рекомендуемые</option>
+          <option value="title">По алфавиту</option>
+        </select>
+      </label>
       <button
         class="btn btn--secondary catalog__mobile-filter"
         type="button"
@@ -83,6 +90,7 @@ const searchText = (offer: Offer): string =>
           data-company={offer.companyId}
           data-method={offer.purchase.method}
           data-obligation={offer.obligation.status}
+          data-title={offer.title}
           data-text={searchText(offer)}
         >
           <OfferCard offer={offer} />

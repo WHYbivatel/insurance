@@ -11,6 +11,7 @@ import Button from './Button.astro';
 import CompanyLogo from './CompanyLogo.astro';
 import { companyById } from '../../data/companies';
 import { categoryTitle } from '../../data/products';
+import { externalHost } from '../../lib/external-link';
 import {
   purchaseShort,
   purchaseLabels,
@@ -44,13 +45,25 @@ const shortCta =
         ? 'Заявка'
         : 'Связаться';
 
-const host = (() => {
-  try {
-    return new URL(offer.purchase.url).host.replace(/^www\./, '');
-  } catch {
-    return '';
-  }
-})();
+const host = externalHost(offer.purchase.url);
+const keyCoverage = offer.coverage[0];
+const structured = offer.conditions;
+const keyCondition = structured
+  ? ('kasko' in structured
+      ? structured.kasko.amountLimit.status === 'known'
+        ? { label: 'Лимит', condition: structured.kasko.amountLimit }
+        : structured.kasko.deductible.status === 'known'
+          ? { label: 'Франшиза', condition: structured.kasko.deductible }
+          : undefined
+      : structured.travel.medicalLimit.status === 'known'
+        ? { label: 'Медицинский лимит', condition: structured.travel.medicalLimit }
+        : structured.travel.ageLimit.status === 'known'
+          ? { label: 'Возраст', condition: structured.travel.ageLimit }
+          : undefined)
+  : undefined;
+const keyConditionText = keyCondition
+  ? `${typeof keyCondition.condition.value === 'number' ? keyCondition.condition.value.toLocaleString('ru-RU') : String(keyCondition.condition.value)}${keyCondition.condition.unit ? ` ${keyCondition.condition.unit}` : ''}`
+  : undefined;
 ---
 
 <article class="card card--hover offer-card">
@@ -63,6 +76,19 @@ const host = (() => {
     <a href={`/predlozhenie/${offer.slug}/`}>{offer.title}</a>
   </h3>
   <p class="offer-card__desc">{offer.tagline}</p>
+
+  <div class="offer-card__key-terms">
+    <div class="offer-card__key-coverage">
+      <Icon name="shield-check" size={16} />
+      <span><strong>Покрытие:</strong> {keyCoverage}</span>
+    </div>
+    {keyCondition && keyConditionText && (
+      <div class="offer-card__key-condition">
+        <span>{keyCondition.label}</span>
+        <strong>{keyConditionText}</strong>
+      </div>
+    )}
+  </div>
 
   <div class="chip-row">
     <span class="chip">{categoryTitle(offer.categoryId)}</span>
@@ -80,6 +106,7 @@ const host = (() => {
       <dd>{priceShort}</dd>
     </div>
   </dl>
+  {offer.price.note && <p class="offer-card__price-note">{offer.price.note}</p>}
 
   <div class="offer-card__actions">
     <Button href={`/predlozhenie/${offer.slug}/`} variant="ghost">Подробнее</Button>

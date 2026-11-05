@@ -1,0 +1,119 @@
+---
+import { publishedOffers } from '../data/products';
+import { companyById } from '../data/companies';
+import { purchaseLabels, type StructuredCondition } from '../data/types';
+
+const comparisonSlugs = ['kasko-nomad-transformer', 'kasko-eurasia-smartcasco', 'kasko-amanat'];
+const offers = comparisonSlugs.map((slug) => {
+  const offer = publishedOffers.find((item) => item.slug === slug);
+  if (!offer) throw new Error(`Не найден продукт для сравнения: ${slug}`);
+  const company = companyById(offer.companyId);
+  if (!company) throw new Error(`Не найдена компания для сравнения: ${offer.companyId}`);
+  return { offer, company };
+});
+
+const unknownLabel = 'Не указано в проверенном источнике. Уточните у страховщика.';
+const conditionValue = (condition?: StructuredCondition) => {
+  if (!condition || condition.status !== 'known' || condition.value == null) return null;
+  const value = typeof condition.value === 'number'
+    ? condition.value.toLocaleString('ru-RU')
+    : String(condition.value);
+  return `${value}${condition.unit ? ` ${condition.unit}` : ''}`;
+};
+const conditionFor = (offer: (typeof offers)[number]['offer'], key: 'amountLimit' | 'deductible' | 'vehicleAge' | 'territory') =>
+  offer.conditions && 'kasko' in offer.conditions ? offer.conditions.kasko[key] : undefined;
+---
+
+<section class="section section--tight kasko-comparison" aria-labelledby="kasko-comparison-title">
+  <div class="section-head">
+    <div>
+      <span class="eyebrow">Сравнение по открытым условиям</span>
+      <h2 id="kasko-comparison-title">Чем отличаются программы КАСКО</h2>
+      <p>Сопоставили три предложения по рискам, опубликованным параметрам и способу расчёта.</p>
+    </div>
+  </div>
+
+  <div class="kasko-comparison__scroll" role="region" aria-label="Сравнение предложений КАСКО" tabindex="0">
+    <table class="kasko-comparison__table">
+      <thead>
+        <tr>
+          <th scope="col">Условие</th>
+          {offers.map(({ offer, company }) => (
+            <th scope="col">
+              <span>{company.name}</span>
+              <a href={`/predlozhenie/${offer.slug}/`}>{offer.title}</a>
+              <small>Источник проверен {offer.checkedAt}</small>
+            </th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th scope="row">Риски и выбор программы</th>
+          {offers.map(({ offer }) => (
+            <td>
+              <ul>
+                {offer.coverage.map((item) => <li>{item}</li>)}
+                {offer.features?.map((item) => <li>{item}</li>)}
+              </ul>
+            </td>
+          ))}
+        </tr>
+        <tr>
+          <th scope="row">Страховая сумма</th>
+          {offers.map(({ offer }) => {
+            const value = conditionValue(conditionFor(offer, 'amountLimit'));
+            return <td data-conditions-status={value ? 'known' : 'unknown'}>{value ?? unknownLabel}</td>;
+          })}
+        </tr>
+        <tr>
+          <th scope="row">Франшиза</th>
+          {offers.map(({ offer }) => {
+            const value = conditionValue(conditionFor(offer, 'deductible'));
+            return <td data-conditions-status={value ? 'known' : 'unknown'}>{value ?? unknownLabel}</td>;
+          })}
+        </tr>
+        <tr>
+          <th scope="row">Возраст автомобиля</th>
+          {offers.map(({ offer }) => {
+            const value = conditionValue(conditionFor(offer, 'vehicleAge'));
+            return <td data-conditions-status={value ? 'known' : 'unknown'}>{value ?? unknownLabel}</td>;
+          })}
+        </tr>
+        <tr>
+          <th scope="row">Территория</th>
+          {offers.map(({ offer }) => {
+            const value = conditionValue(conditionFor(offer, 'territory'));
+            return <td data-conditions-status={value ? 'known' : 'unknown'}>{value ?? unknownLabel}</td>;
+          })}
+        </tr>
+        <tr>
+          <th scope="row">Стоимость</th>
+          {offers.map(({ offer }) => <td>{offer.price.text}</td>)}
+        </tr>
+        <tr>
+          <th scope="row">Расчёт и оформление</th>
+          {offers.map(({ offer }) => (
+            <td>
+              <strong>{purchaseLabels[offer.purchase.method]}</strong>
+              <p>{offer.purchase.note}</p>
+              <a class="kasko-comparison__source" href={offer.source.url} target="_blank" rel="noopener noreferrer nofollow">
+                Официальный источник
+              </a>
+            </td>
+          ))}
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p class="kasko-comparison__note">
+    Неизвестное значение означает, что мы не нашли его в проверенной публикации, а не то, что условие отсутствует.
+    Цена, франшиза и покрытие могут зависеть от автомобиля, выбранной программы и договора. Сравнение справочное;
+    проверьте индивидуальный расчёт и полные условия у страховщика. Centras Мини КАСКО ограничено лимитом до 500 000 ₸
+    и ремонтными расходами после ДТП, поэтому в таблицу полноценных программ не включено.
+    <a class="kasko-comparison__source" href="https://www.cic.kz/autoIndivid" target="_blank" rel="noopener noreferrer nofollow">
+      Источник по Мини КАСКО
+    </a>
+  </p>
+</section>

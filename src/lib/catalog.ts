@@ -27,6 +27,9 @@ export function initCatalog(): void {
 
   const search = root.querySelector<HTMLInputElement>('[data-catalog-search]');
   const count = root.querySelector<HTMLElement>('[data-count]');
+  const sort = root.querySelector<HTMLSelectElement>('[data-catalog-sort]');
+  const resultList = root.querySelector<HTMLElement>('[data-results]');
+  const facetCounts = Array.from(root.querySelectorAll<HTMLElement>('[data-filter-count]'));
   const empty = root.querySelector<HTMLElement>('[data-empty]');
   const checks = Array.from(root.querySelectorAll<HTMLInputElement>('[data-filter]'));
   const resetButtons = Array.from(root.querySelectorAll<HTMLButtonElement>('[data-reset]'));
@@ -38,11 +41,16 @@ export function initCatalog(): void {
 
   let flashTimer = 0;
 
-  const apply = (updateUrl = true, animate = true): void => {
+  const apply = (
+    updateUrl = true,
+    animate = true,
+    historyMode: 'replace' | 'push' = 'replace',
+  ): void => {
     const q = normalize(search?.value ?? '');
     const company = selected('company');
     const method = selected('method');
     const obligation = selected('obligation');
+    const sortValue = sort?.value === 'title' ? 'title' : 'recommended';
 
     let visible = 0;
     const shown: HTMLElement[] = [];
@@ -62,6 +70,28 @@ export function initCatalog(): void {
       }
     }
 
+    // Facet counts show how many results each option yields with the other
+    // active filters applied (the current facet itself is intentionally omitted).
+    for (const badge of facetCounts) {
+      const facet = badge.dataset.filter ?? '';
+      const value = badge.dataset.value ?? '';
+      const matches = cards.filter((card) => {
+        const matchesQuery = !q || normalize(card.dataset.text ?? '').includes(q);
+        const matchesCompany = facet === 'company' || company.length === 0 || company.includes(card.dataset.company ?? '');
+        const matchesMethod = facet === 'method' || method.length === 0 || method.includes(card.dataset.method ?? '');
+        const matchesObligation = facet === 'obligation' || obligation.length === 0 || obligation.includes(card.dataset.obligation ?? '');
+        return matchesQuery && matchesCompany && matchesMethod && matchesObligation && card.dataset[facet] === value;
+      }).length;
+      badge.textContent = String(matches);
+    }
+
+    if (resultList) {
+      const ordered = sortValue === 'title'
+        ? [...cards].sort((a, b) => normalize(a.dataset.title ?? '').localeCompare(normalize(b.dataset.title ?? ''), 'ru'))
+        : cards;
+      ordered.forEach((card) => resultList.insertBefore(card, empty));
+    }
+
     if (count) count.innerHTML = `Найдено <strong>${visible}</strong> ${plural(visible)}`;
     if (empty) empty.hidden = visible !== 0;
 
@@ -73,37 +103,50 @@ export function initCatalog(): void {
     }
 
     if (updateUrl) {
-      const params = new URLSearchParams();
+      const params = new URLSearchParams(location.search);
+      for (const name of ['q', 'company', 'method', 'obligation', 'sort']) params.delete(name);
       if (q) params.set('q', search?.value.trim() ?? '');
       if (company.length) params.set('company', company.join(','));
       if (method.length) params.set('method', method.join(','));
       if (obligation.length) params.set('obligation', obligation.join(','));
+      if (sortValue !== 'recommended') params.set('sort', sortValue);
       const next = `${location.pathname}${params.toString() ? `?${params}` : ''}`;
-      history.replaceState(null, '', next);
+      history[`${historyMode}State`](null, '', next + location.hash);
     }
   };
 
-  // Восстанавливаем состояние из адреса.
-  const params = new URLSearchParams(location.search);
-  const q = params.get('q');
-  if (q && search) search.value = q;
-  for (const name of ['company', 'method', 'obligation']) {
-    const values = (params.get(name) ?? '').split(',').filter(Boolean);
-    checks.forEach((c) => {
-      if (c.dataset.filter === name && values.includes(c.value)) c.checked = true;
-    });
-  }
+  const restoreFromUrl = (): void => {
+    const params = new URLSearchParams(location.search);
+    if (search) search.value = params.get('q') ?? '';
+    if (sort) sort.value = params.get('sort') === 'title' ? 'title' : 'recommended';
+    for (const name of ['company', 'method', 'obligation']) {
+      const values = (params.get(name) ?? '').split(',').filter(Boolean);
+      checks.forEach((c) => {
+        if (c.dataset.filter === name) c.checked = values.includes(c.value);
+      });
+    }
+  };
 
-  checks.forEach((c) => c.addEventListener('change', () => apply()));
+  // Восстанавливаем фильтры при загрузке и при переходе назад/вперёд.
+  restoreFromUrl();
+
+  checks.forEach((c) => c.addEventListener('change', () => apply(true, true, 'push')));
   search?.addEventListener('input', () => apply());
+  sort?.addEventListener('change', () => apply(true, false, 'push'));
+  window.addEventListener('popstate', () => {
+    restoreFromUrl();
+    apply(false, true);
+  });
 
   resetButtons.forEach((button) =>
     button.addEventListener('click', () => {
       checks.forEach((c) => (c.checked = false));
       if (search) search.value = '';
-      apply();
+      if (sort) sort.value = 'recommended';
+      apply(true, true, 'push');
       if (filters) filters.dataset.open = 'false';
       filterToggle?.setAttribute('aria-expanded', 'false');
+      if (filters?.contains(document.activeElement) && window.matchMedia('(max-width: 1024px)').matches) filterToggle?.focus();
     })
   );
 

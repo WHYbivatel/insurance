@@ -29,8 +29,7 @@ const isCurrent = (href: string) => current === href || (href !== '/' && current
 /* Разделы показываем для той аудитории, в которой находится пользователь.
    На главной, где аудитория ещё не выбрана, — для частных лиц. */
 const activeAudience: Audience = audience ?? 'individual';
-const basePath = activeAudience === 'individual' ? '/dlya-sebya' : '/dlya-biznesa';
-const sections = categoriesByAudience(activeAudience);
+const audiences: Audience[] = ['individual', 'business'];
 ---
 
 <div class="mobile-menu" id="mobile-menu" data-open="false">
@@ -50,18 +49,27 @@ const sections = categoriesByAudience(activeAudience);
       }
     </nav>
 
-    <div class="mobile-menu__sections">
-      <p class="mobile-menu__label">
-        Разделы · {activeAudience === 'individual' ? 'Для себя' : 'Для бизнеса'}
-      </p>
-      <div class="mobile-menu__grid">
-        {sections.map((section) => (
-          <a class="mobile-menu__section" href={`${basePath}/${section.slug}/`}>
-            {section.navTitle}
-          </a>
-        ))}
+    {audiences.map((value) => (
+      <div
+        class="mobile-menu__sections"
+        data-mobile-audience={value}
+        hidden={value !== activeAudience}
+      >
+        <p class="mobile-menu__label">
+          Разделы · {value === 'individual' ? 'Для себя' : 'Для бизнеса'}
+        </p>
+        <div class="mobile-menu__grid">
+          {categoriesByAudience(value).map((section) => (
+            <a
+              class="mobile-menu__section"
+              href={`${value === 'individual' ? '/dlya-sebya' : '/dlya-biznesa'}/${section.slug}/`}
+            >
+              {section.navTitle}
+            </a>
+          ))}
+        </div>
       </div>
-    </div>
+    ))}
 
     <AudienceSwitch audience={audience} block label="Раздел каталога в мобильном меню" />
   </div>

@@ -1,0 +1,53 @@
+---
+import type { KaskoConditions, TravelConditions } from '../data/types';
+
+interface Props {
+  conditions: { kasko: KaskoConditions } | { travel: TravelConditions };
+  source: { label: string; url: string };
+  checkedAt: string;
+}
+
+const { conditions, source, checkedAt } = Astro.props;
+const isKasko = 'kasko' in conditions;
+const rows = isKasko
+  ? [
+      ['Страховая сумма или лимит', conditions.kasko.amountLimit],
+      ['Франшиза', conditions.kasko.deductible],
+      ['Возраст автомобиля', conditions.kasko.vehicleAge],
+      ['Территория действия', conditions.kasko.territory],
+    ] as const
+  : [
+      ['Лимит медицинских расходов', conditions.travel.medicalLimit],
+      ['Возраст застрахованного', conditions.travel.ageLimit],
+      ['Срок поездки', conditions.travel.tripDuration],
+      ['Франшиза', conditions.travel.deductible],
+      ['Территория действия', conditions.travel.territory],
+      ['COVID-19', conditions.travel.covidCoverage],
+    ] as const;
+const dateLabel = new Date(`${checkedAt}T00:00:00.000Z`).toLocaleDateString('ru-RU', {
+  day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC',
+});
+---
+
+<section class="offer-section structured-conditions" aria-labelledby="structured-conditions-title">
+  <h2 id="structured-conditions-title">{isKasko ? 'Условия КАСКО' : 'Условия страхования поездки'}</h2>
+  <p class="structured-conditions__intro">
+    Значение «не указано» означает, что в каталоге нет подтверждённой цифры или условия. Это не означает, что риск исключён из полиса.
+  </p>
+  <dl class="structured-conditions__list">
+    {rows.map(([label, condition]) => (
+      <div class="structured-conditions__row">
+        <dt>{label}</dt>
+        <dd>
+          {condition.status === 'unknown'
+            ? <span class="structured-conditions__unknown">Не указано в данных каталога</span>
+            : <span>{typeof condition.value === 'number' ? condition.value.toLocaleString('ru-RU') : String(condition.value)}{condition.unit ? ` ${condition.unit}` : ''}</span>}
+          {condition.note && <small>{condition.note}</small>}
+        </dd>
+      </div>
+    ))}
+  </dl>
+  <p class="structured-conditions__source">
+    По данным: <a href={source.url} target="_blank" rel="noopener noreferrer nofollow">{source.label}</a> · проверено {dateLabel}
+  </p>
+</section>

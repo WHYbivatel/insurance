@@ -30,12 +30,14 @@ const {
 } = Astro.props;
 ---
 
-<div class:list={['empty-state', className]} data-empty role="status" hidden={hidden}>
-  <span class="empty-state__icon">
-    <Icon name={icon} size={22} />
-  </span>
-  <h3>{title}</h3>
-  <p>{description}</p>
+<div class:list={['empty-state', className]} data-empty hidden={hidden}>
+  <div class="empty-state__message" role="status" aria-atomic="true">
+    <span class="empty-state__icon">
+      <Icon name={icon} size={22} />
+    </span>
+    <h3>{title}</h3>
+    <p>{description}</p>
+  </div>
   {
     actionLabel && href && (
       <Button href={href} variant="primary">

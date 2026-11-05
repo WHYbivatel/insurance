@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Адаптив, уменьшение движения, печать
+   Адаптив и печать. Все viewport-breakpoints принадлежат этому файлу.
    ========================================================================== */
 
 /* ---------- Responsive ---------- */
@@ -153,6 +153,26 @@
 }
 
 @media (max-width: 640px) {
+  .offer-summary {
+    padding: 14px;
+  }
+
+  .offer-summary__top {
+    flex-direction: column;
+  }
+
+  .offer-summary__facts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .structured-conditions {
+    padding: 14px;
+  }
+
+  .structured-conditions__list {
+    grid-template-columns: 1fr;
+  }
+
   .container {
     padding-inline: 18px;
   }
@@ -268,22 +288,6 @@
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
-
-  .btn:hover,
-  .card--hover:hover {
-    transform: none;
-  }
-}
-
 @media print {
   .header,
   .footer,
@@ -291,5 +295,12 @@
   .offer-aside,
   .breadcrumbs {
     display: none !important;
+  }
+}
+
+@media (min-width: 1025px) {
+  /* .icon-btn задаёт inline-flex, поэтому на desktop явно скрываем меню. */
+  .header .menu-toggle {
+    display: none;
   }
 }

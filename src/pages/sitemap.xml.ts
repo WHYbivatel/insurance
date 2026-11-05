@@ -27,7 +27,6 @@ ${urls
   .map(
     ({ path, priority }) => `  <url>
     <loc>${new URL(path, site.url).href}</loc>
-    <lastmod>${site.updatedAt}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>${priority}</priority>
   </url>`

@@ -28,7 +28,7 @@ const { items, idPrefix = 'acc', openFirst = 0 } = Astro.props;
       const open = index < openFirst;
       return (
         <div class="accordion__item">
-          <h3 style="margin:0">
+          <h3 class="accordion__heading">
             <button
               class="accordion__trigger"
               type="button"

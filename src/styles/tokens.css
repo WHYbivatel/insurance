@@ -145,17 +145,3 @@
   --stagger: 45ms; /* шаг последовательного появления */
   --reveal-shift: 12px; /* сдвиг снизу при появлении */
 }
-
-/* Меньше движения — короче и без перемещений. Значения остаются валидными,
-   поэтому компоненты не нужно переписывать. */
-@media (prefers-reduced-motion: reduce) {
-  :root {
-    --dur-instant: 1ms;
-    --dur-fast: 1ms;
-    --dur-base: 1ms;
-    --dur-slow: 1ms;
-    --dur-reveal: 1ms;
-    --stagger: 0ms;
-    --reveal-shift: 0px;
-  }
-}

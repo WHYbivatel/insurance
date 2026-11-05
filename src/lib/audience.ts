@@ -45,8 +45,12 @@ function audienceFromHref(href: string): Audience | null {
   return null;
 }
 
-/** Подсветка переключателей и кнопок первого экрана. */
+/** Синхронизация переключателей и разделов мобильного меню. */
 export function applyAudience(value: Audience): void {
+  document.querySelectorAll<HTMLElement>('[data-mobile-audience]').forEach((section) => {
+    section.hidden = section.dataset.mobileAudience !== value;
+  });
+
   document.querySelectorAll<HTMLElement>('[data-audience-switch]').forEach((sw) => {
     sw.dataset.active = 'set';
     sw.style.setProperty('--audience-index', value === 'business' ? '1' : '0');

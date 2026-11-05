@@ -42,7 +42,7 @@ const buildId = createHash('sha256')
   .slice(0, 12);
 
 export default defineConfig({
-  site: process.env.PUBLIC_SITE_URL ?? 'https://polis.kz',
+  site: process.env.PUBLIC_SITE_URL ?? 'https://strahovka.esl.kz',
   output: 'static',
   compressHTML: true,
   build: {

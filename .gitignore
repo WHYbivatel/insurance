@@ -9,3 +9,7 @@ npm-debug.log*
 
 # служебные данные рабочего окружения
 .workbuddy-ai/
+
+# Результаты браузерных тестов
+playwright-report/
+test-results/

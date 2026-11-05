@@ -4,6 +4,32 @@ export type Audience = 'individual' | 'business';
 
 export type PurchaseMethod = 'online' | 'request' | 'office' | 'partner';
 
+/** Условие: значение указано в каталоге либо пока неизвестно. Неизвестное не означает отсутствие покрытия. */
+export interface StructuredCondition {
+  status: 'known' | 'unknown';
+  value: string | number | boolean | null;
+  unit?: string;
+  note?: string;
+}
+
+export interface KaskoConditions {
+  amountLimit: StructuredCondition;
+  deductible: StructuredCondition;
+  vehicleAge: StructuredCondition;
+  territory: StructuredCondition;
+}
+
+export interface TravelConditions {
+  medicalLimit: StructuredCondition;
+  ageLimit: StructuredCondition;
+  tripDuration: StructuredCondition;
+  deductible: StructuredCondition;
+  territory: StructuredCondition;
+  covidCoverage: StructuredCondition;
+}
+
+export type OfferConditions = { kasko: KaskoConditions } | { travel: TravelConditions };
+
 /**
  * Обязательность конкретного предложения.
  * Категория может содержать и обязательные, и добровольные продукты,
@@ -94,6 +120,10 @@ export interface Offer {
   categoryId: string;
   tagline: string;
   description: string;
+  /** Сервисные возможности и другие свойства продукта; не перечень застрахованных рисков. */
+  features?: string[];
+  /** Структурированные условия для КАСКО и страхования поездок. */
+  conditions?: OfferConditions;
   coverage: string[];
   exclusions: string[];
   limits: string[];
@@ -113,10 +143,24 @@ export interface Offer {
   documents: string[];
   source: { label: string; url: string };
   checkedAt: string;
+  /** Редакционные метаданные вычисляются при загрузке каталога и не публикуются в карточке. */
+  editorial?: OfferEditorialMetadata;
   status: 'published' | 'draft' | 'archived';
   featured?: boolean;
   badge?: string;
   searchTerms?: string[];
+}
+
+export interface OfferEditorialMetadata {
+  /** published становится публичным, draft/archived остаются во внутреннем каталоге. */
+  visibility: 'public' | 'internal';
+  /** Источник проверен и срок следующей проверки ещё не наступил либо уже наступил. */
+  reviewStatus: 'scheduled' | 'due';
+  sourceCheckedAt: string;
+  nextReviewAt: string;
+  /** Указываем только при наличии достоверной истории редакционных изменений. */
+  contentModifiedAt?: string;
+  notes?: { public?: string; internal?: string };
 }
 
 export const purchaseLabels: Record<PurchaseMethod, string> = {

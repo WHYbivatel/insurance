@@ -69,7 +69,7 @@ npm run preview   # локальный просмотр собранной ве�
 npm run check            # типы и разметка Astro — должно быть 0 ошибок
 npm run build            # сборка: 91 страница в dist/
 node scripts/regression-tests.mjs   # 27 регрессионных проверок по dist/
-npm run verify:internal  # внутренние ссылки в собранных страницах (нужен build)
+npm run verify:internal  # маршруты и якоря внутренних ссылок (нужен build)
 npm run verify:links     # внешние ссылки на сайты страховщиков
 npm run version:info     # содержимое dist/version.json
 ```
@@ -85,17 +85,26 @@ npm run version:info     # содержимое dist/version.json
 (`npm run verify:links:soft`) делает шаг незаваливающим — именно так он запускается в CI,
 чтобы временная недоступность чужого сайта не ломала сборку.
 
-`verify:internal` читает `dist/` и проверяет, что каждый внутренний `href` ведёт на
-существующую страницу.
+`verify:internal` читает HTML в `dist/` и проверяет существование внутренних страниц,
+а также ID, на которые ведут ссылки с `#якорем`.
 
 ### Проверка в реальном браузере
 
-Статические тесты не видят, что карточка осталась на экране из-за CSS. Поэтому
-поведение проверяется в настоящем браузере (headless Chrome через `puppeteer-core`):
-25 сценариев на ширинах 390, 768 и 1280–1440 px — видимость карточек после фильтрации,
-сохранение аудитории, полное мобильное меню, клавиатура в подсказках, читаемость шагов
-оформления на телефоне, загрузка всех логотипов, очередь и таймеры уведомлений,
-`prefers-reduced-motion`, отсутствие горизонтальной прокрутки.
+Браузерные тесты Playwright проверяют поведение собранного сайта на ширинах
+390 и 1280 px: полную выдачу поиска (в том числе больше 40 предложений), пустое
+состояние и сброс запроса, сохранение разделов мобильного меню при смене аудитории,
+индикатор обновления после перехода и отсутствие повторного уведомления.
+
+```bash
+npx playwright install chromium  # один раз после установки зависимостей
+npm run build
+npm run test:browser             # сам запускает preview на порту 49731
+```
+
+В CI Chromium устанавливается автоматически, браузерные тесты блокируют сборку
+при ошибке. Для запуска с уже установленным Chromium можно задать абсолютный путь
+к нему через `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH`. Остальные визуальные сценарии
+проверяются вручную по списку ниже.
 
 Порядок ручной проверки:
 
@@ -129,7 +138,7 @@ cp .env.example .env
 
 | Переменная | Назначение | По умолчанию |
 | --- | --- | --- |
-| `PUBLIC_SITE_URL` | Абсолютный адрес сайта для canonical, Open Graph, `sitemap.xml` и `robots.txt` | `https://polis.kz` |
+| `PUBLIC_SITE_URL` | Абсолютный адрес сайта для canonical, Open Graph, `sitemap.xml` и `robots.txt` | `https://strahovka.esl.kz` |
 
 Для локальной разработки переменную можно не задавать.
 
@@ -140,7 +149,8 @@ cp .env.example .env
 ├── public/
 │   ├── _headers                    # правила кеширования для статического хостинга
 │   ├── favicon.svg
-│   └── og.svg                      # картинка для соцсетей 1200×630
+│   ├── og.svg                      # исходник превью для соцсетей
+│   └── og.png                      # превью 1200×630 для Open Graph/Twitter
 ├── scripts/
 │   ├── verify-links.mjs            # внешние и внутренние ссылки
 │   └── regression-tests.mjs        # 27 регрессионных проверок по dist/
@@ -585,6 +595,7 @@ interface Offer {
   categoryId: string;
   tagline: string;
   description: string;
+  features?: string[];           // сервисные возможности и другие свойства вне страхового покрытия
   coverage: string[];
   exclusions: string[];
   limits: string[];
@@ -606,6 +617,12 @@ interface Offer {
   searchTerms?: string[];
 }
 ```
+
+### Редакционный учёт источников
+
+`checkedAt` — когда проверили официальный источник, а не когда изменили текст. Поля `editorial` добавляются при сборке: `sourceCheckedAt`, `nextReviewAt` (через 90 дней), статус `scheduled`/`due` и видимость `public`/`internal`. `contentModifiedAt` оставляйте незаполненным, если точная дата редакционного изменения неизвестна. Правила и смысл полей описаны в [`docs/editorial-metadata.md`](docs/editorial-metadata.md); сборка проверяет их через `src/data/validate.ts`.
+
+Сообщения об ошибках и предложения по каталогу принимаются через [подготовленный черновик GitHub Issue](https://strahovka.esl.kz/o-servise/#contacts). Для отправки потребуется аккаунт GitHub. Сообщение служит поводом для проверки, а не подтверждением факта: менять условия и добавлять предложения можно только по официальным источникам страховщика. Порядок обработки и правила защиты персональных данных описаны в [`docs/editorial-metadata.md`](docs/editorial-metadata.md).
 
 ### Как добавить страховщика
 
@@ -716,8 +733,7 @@ import exampleMark from '../assets/logos/example-mark.svg';
 5. Перед коммитом прогоните типы и регрессии: `npm run check` и
    `node scripts/regression-tests.mjs`.
 
-Дата последнего общего обзора каталога хранится в `src/data/site.ts` в поле
-`updatedAt` — она выводится в футере и используется в `sitemap.xml`.
+Поле `updatedAt` в `src/data/site.ts` сохраняет историческую дату запуска. Футер и страница сервиса показывают диапазон фактических `checkedAt`; sitemap не содержит выдуманного `lastmod`.
 
 ---
 
@@ -804,7 +820,7 @@ SemVer в `package.json` (`version`). Правила:
 | `/*.html`, `/` | `no-cache` | новая сборка видна сразу |
 | `/version.json` | `no-store` | иначе вкладка не увидит обновление |
 | `/robots.txt`, `/sitemap.xml` | `public, max-age=3600` | меняются редко |
-| `/favicon.svg`, `/og.svg` | `public, max-age=86400` | статичные картинки |
+| `/favicon.svg`, `/og.svg`, `/og.png` | `public, max-age=86400` | статичные картинки |
 
 Кеш не отключается для всего подряд: хешированные файлы кешируются надолго, иначе
 каждая загрузка тянула бы шрифты и стили заново. `localStorage` при обычном обновлении
@@ -820,11 +836,11 @@ Pages работают только хешированные имена файл
 `src/lib/version.ts`:
 
 - после загрузки — одна лёгкая проверка `fetch('/version.json', { cache: 'no-store' })`;
-- при возврате на вкладку — не чаще одного раза в минуту;
-- каждые 5 минут, только когда вкладка видима.
+- при возврате на вкладку — не чаще одного раза в 15 секунд;
+- каждые 30 секунд, только когда вкладка видима.
 
 Если `buildId` на сервере отличается, показывается одно уведомление «Доступна новая
-версия сайта» с кнопкой «Обновить». После его закрытия в подвале остаётся компактный
+версия сайта» с кнопкой «Обновить». Через 8 секунд вкладка автоматически перезагружается; пока пользователь вводит данные или вкладка скрыта, перезагрузка откладывается. После закрытия уведомления в подвале остаётся компактный
 доступный индикатор обновления. Одно и то же сообщение повторно не показывается
 (ключ `polis:update-notified`).
 
@@ -842,6 +858,57 @@ Pages работают только хешированные имена файл
 выкладывайте `/_astro/`, затем HTML, и только потом `/version.json` — так вкладка
 не увидит обновление раньше, чем появятся новые файлы.
 
+### Публикация на `strahovka.esl.kz`
+
+Серверный корень проекта — `/var/www/strahovka.esl.kz`, опубликованные файлы —
+`/var/www/strahovka.esl.kz/dist`. Подключение SSH `projects.100k.kz` должно быть
+заранее настроено. Перед каждой выкладкой сохраняйте текущую папку сайта в
+`/var/backups/strahovka.esl.kz/`; не меняйте nginx и соседние сайты.
+
+Сначала соберите и проверьте релиз:
+
+```bash
+npm ci
+npm run check
+npm run test:data
+PUBLIC_SITE_URL=https://strahovka.esl.kz npm run build
+node scripts/regression-tests.mjs
+npm run verify:internal
+npm run test:browser
+```
+
+После этого сохраните снимок сайта и синхронизируйте исходники, не перезаписывая
+текущую сборку и локальные секреты:
+
+```bash
+STAMP=$(date -u +%Y%m%d-%H%M%S)
+BACKUP="/var/backups/strahovka.esl.kz/pre-${STAMP}.tar.gz"
+ssh projects.100k.kz "mkdir -p /var/backups/strahovka.esl.kz && tar -czf '${BACKUP}' -C /var/www strahovka.esl.kz && test -s '${BACKUP}'"
+rsync -az --exclude='.git' --exclude='node_modules' --exclude='.astro' --exclude='dist' --exclude='.env' --exclude='test-results' --exclude='playwright-report' ./ projects.100k.kz:/var/www/strahovka.esl.kz/
+```
+
+Выкладывайте ресурсы, HTML, а затем идентификатор сборки, чтобы открытые вкладки не
+увидели обновление раньше появления новых файлов:
+
+```bash
+rsync -az --delay-updates --exclude='*.html' --exclude='version.json' dist/ projects.100k.kz:/var/www/strahovka.esl.kz/dist/
+rsync -az --delay-updates --include='*/' --include='*.html' --exclude='*' dist/ projects.100k.kz:/var/www/strahovka.esl.kz/dist/
+rsync -az dist/version.json projects.100k.kz:/var/www/strahovka.esl.kz/dist/version.json
+curl -fsSI https://strahovka.esl.kz/
+curl -fsS https://strahovka.esl.kz/version.json
+```
+
+Сверьте `buildId` с локальным `dist/version.json`, затем откройте главную, категорию,
+предложение и поиск. Если проверка не прошла, восстановите сохранённую папку целиком;
+перед распаковкой проверьте, что архив содержит корень только этого сайта:
+
+```bash
+ssh projects.100k.kz "set -e; BACKUP='${BACKUP}'; test -s \"\$BACKUP\"; tar -tzf \"\$BACKUP\" > /tmp/strahovka-rollback-files.txt; grep -q '^strahovka.esl.kz/' /tmp/strahovka-rollback-files.txt; tar -xzf \"\$BACKUP\" -C /var/www; rm /tmp/strahovka-rollback-files.txt; test -s /var/www/strahovka.esl.kz/dist/index.html"
+curl -fsSI https://strahovka.esl.kz/
+```
+
+Оставьте архив на сервере и укажите его имя вместе с `buildId` в `docs/plan-status.md`.
+
 ## CI и публикация
 
 Workflow — `.github/workflows/ci.yml`. Запускается на pull request и на push в `main`
@@ -850,14 +917,16 @@ Workflow — `.github/workflows/ci.yml`. Запускается на pull reques
 Что делает job «Сборка и проверки»:
 
 1. `actions/checkout` с полной историей — нужен SHA для `buildId`;
-2. `actions/setup-node` с Node 22 и кешем npm;
+2. `actions/setup-node` с Node 24 и кешем npm;
 3. `npm ci`;
 4. `npm run check` — типы и разметка;
-5. `npm run build`;
-6. `node scripts/regression-tests.mjs` — 27 регрессионных проверок;
-7. `npm run verify:internal` — внутренние ссылки;
-8. `npm run version:info` — печать сведений о сборке в лог;
-9. `actions/upload-artifact` — `dist/` сохраняется артефактом на 14 дней.
+5. `npm run test:data` — проверка каталожных данных;
+6. `npm run build`;
+7. `node scripts/regression-tests.mjs` — регрессионные проверки готовой статики;
+8. `npm run test:browser` — браузерные сценарии на мобильной и настольной ширине;
+9. `npm run verify:internal` — внутренние адреса и якоря на существующие разделы;
+10. `npm run version:info` — печать сведений о сборке в лог;
+11. `actions/upload-artifact` — `dist/` сохраняется артефактом на 14 дней.
 
 Отдельный job «Внешние ссылки» проверяет сайты страховщиков с `--soft` и **не блокирует**
 пайплайн: временная недоступность чужого сайта из сети GitHub — не ошибка проекта.

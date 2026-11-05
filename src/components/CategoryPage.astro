@@ -6,12 +6,15 @@ import CategoryCard from './ui/CategoryCard.astro';
 import EmptyState from './ui/EmptyState.astro';
 import Reveal from './ui/Reveal.astro';
 import Icon from './Icon.astro';
+import Button from './ui/Button.astro';
 import CatalogBrowser from './CatalogBrowser.astro';
+import KaskoComparison from './KaskoComparison.astro';
 import Faq from './Faq.astro';
 import { categoryById } from '../data/categories';
 import { offersByCategory, audienceCount, publishedOffers } from '../data/products';
 import { purchaseLabels, obligationTone, obligationShort } from '../data/types';
 import type { Category, ObligationStatus } from '../data/types';
+import { site } from '../data/site';
 
 interface Props {
   category: Category;
@@ -22,6 +25,7 @@ const audience = category.audience;
 const offers = offersByCategory(audience, category.id);
 const basePath = audience === 'individual' ? '/dlya-sebya' : '/dlya-biznesa';
 const audienceLabel = audience === 'individual' ? 'Для себя' : 'Для бизнеса';
+const absoluteUrl = (path: string) => new URL(path, site.url).href;
 const related = category.related
   .map((id) => categoryById(id))
   .filter((c): c is Category => Boolean(c) && c!.audience === audience);
@@ -65,15 +69,16 @@ const schema = [
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Главная', item: '/' },
-      { '@type': 'ListItem', position: 2, name: audienceLabel, item: `${basePath}/` },
-      { '@type': 'ListItem', position: 3, name: category.navTitle, item: `${basePath}/${category.slug}/` },
+      { '@type': 'ListItem', position: 1, name: 'Главная', item: absoluteUrl('/') },
+      { '@type': 'ListItem', position: 2, name: audienceLabel, item: absoluteUrl(`${basePath}/`) },
+      { '@type': 'ListItem', position: 3, name: category.navTitle, item: absoluteUrl(`${basePath}/${category.slug}/`) },
     ],
   },
   {
     '@context': 'https://schema.org',
     '@type': 'CollectionPage',
     name: category.title,
+    url: absoluteUrl(`${basePath}/${category.slug}/`),
     description: category.short,
     inLanguage: 'ru-KZ',
   },
@@ -94,9 +99,9 @@ const schema = [
       <div>
         <span class={`cat-hero__icon tint-${category.tint}`}><Icon name={category.icon} size={26} /></span>
         <span class="eyebrow">{audienceLabel} · {category.groupTitle}</span>
-        <h1 style="margin-top:12px">{category.title}</h1>
+        <h1 class="cat-hero__title">{category.title}</h1>
         <p class="page-head__lead">{category.lead}</p>
-        <div class="meta-row" style="margin-top:18px">
+        <div class="meta-row cat-hero__meta">
           {singleStatus ? (
             <Badge tone={obligationTone[singleStatus]} size="lg" icon={singleStatus === 'required' ? 'warning' : singleStatus === 'voluntary' ? 'success' : 'info'}>
               {obligationShort[singleStatus]}
@@ -106,6 +111,12 @@ const schema = [
           )}
           <span class="chip">{offers.length} {pluralOffers(offers.length)}</span>
           {methods.slice(0, 2).map((method) => <span class="chip chip--outline">{method}</span>)}
+        </div>
+        <div class="cat-hero__actions">
+          <Button href="#offers-title" variant="primary" size="lg">
+            Смотреть предложения
+          </Button>
+          <span class="cat-hero__hint">{offers.length} {pluralOffers(offers.length)} · сравните условия и оформление</span>
         </div>
       </div>
 
@@ -125,17 +136,17 @@ const schema = [
           </div>
           <div class="fact-list__item">
             <Icon name="doc" size={16} />
-            <span><strong>В каталоге:</strong> {offers.length} проверенных {pluralOffers(offers.length)}</span>
+            <span><strong>В каталоге:</strong> {offers.length} {pluralOffers(offers.length)}</span>
           </div>
           <div class="fact-list__item">
             <Icon name="external" size={16} />
-            <span><strong>Оформление:</strong> у страховщика</span>
+            <span><strong>Оформление:</strong> у страховщика или на партнёрской площадке — способ указан у предложения</span>
           </div>
         </div>
       </aside>
     </div>
 
-    <div class="grid grid--2" style="margin-top:30px">
+    <div class="grid grid--2 category-details-grid">
       <section class="info-block" aria-labelledby="who-title">
         <h2 id="who-title">Кому подходит</h2>
         <ul class="bullet-list">
@@ -151,7 +162,7 @@ const schema = [
       </section>
     </div>
 
-    <section style="margin-top:16px" aria-labelledby="obligation-title">
+    <section class="category-obligation" aria-labelledby="obligation-title">
       <div class="obligation">
         <Icon name="info" size={19} />
         <div>
@@ -182,7 +193,9 @@ const schema = [
       </div>
     </Reveal>
 
-    <section class="section section--tight" aria-labelledby="offers-title" style="padding-top:0">
+    {category.id === 'kasko' && audience === 'individual' && <KaskoComparison />}
+
+    <section class="section section--tight section--flush-top" aria-labelledby="offers-title">
       <div class="section-head">
         <div>
           <span class="eyebrow">Предложения</span>

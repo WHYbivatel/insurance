@@ -5,7 +5,7 @@ export const site = {
   tagline: 'страхование в Казахстане',
   description:
     'Каталог страхования Казахстана: объяснения видов страхования, проверенные предложения страховых компаний и переход к оформлению у страховщика.',
-  url: import.meta.env.PUBLIC_SITE_URL ?? 'https://polis.kz',
+  url: import.meta.env.PUBLIC_SITE_URL ?? 'https://strahovka.esl.kz',
   locale: 'ru_KZ',
   language: 'ru',
   updatedAt: '2026-10-23',

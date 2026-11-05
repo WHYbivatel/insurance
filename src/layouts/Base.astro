@@ -18,8 +18,23 @@ interface Props {
 const { title, description, audience, noindex = false, schema } = Astro.props;
 const fullTitle = title === site.name ? `${site.name} — ${site.tagline}` : `${title} — ${site.name}`;
 const canonical = new URL(Astro.url.pathname, site.url).href;
-const ogImage = new URL('/og.svg', site.url).href;
-const schemas = schema ? (Array.isArray(schema) ? schema : [schema]) : [];
+const ogImage = new URL('/og.png', site.url).href;
+const suppliedSchemas = schema ? (Array.isArray(schema) ? schema : [schema]) : [];
+const hasPageSchema = suppliedSchemas.some((item) => item['@type'] === 'WebPage');
+const schemas = noindex || hasPageSchema
+  ? suppliedSchemas
+  : [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'WebPage',
+        url: canonical,
+        name: fullTitle,
+        description,
+        inLanguage: site.locale.replace('_', '-'),
+        isPartOf: { '@type': 'WebSite', name: site.name, url: site.url },
+      },
+      ...suppliedSchemas,
+    ];
 ---
 
 <!doctype html>
@@ -45,9 +60,15 @@ const schemas = schema ? (Array.isArray(schema) ? schema : [schema]) : [];
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
     <meta property="og:image" content={ogImage} />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Полис — каталог страхования Казахстана" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={fullTitle} />
     <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+    <meta name="twitter:image:alt" content="Полис — каталог страхования Казахстана" />
 
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/favicon.svg" />
@@ -67,7 +88,7 @@ const schemas = schema ? (Array.isArray(schema) ? schema : [schema]) : [];
   <body data-page-audience={audience ?? ''}>
     <a class="skip-link" href="#main">Перейти к содержимому</a>
     <Header audience={audience} />
-    <main id="main">
+    <main id="main" tabindex="-1">
       <slot />
     </main>
     <Footer />

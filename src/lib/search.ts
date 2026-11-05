@@ -12,12 +12,17 @@ interface Suggestion {
   sub: string;
   url: string;
   type: string;
+  terms?: string[];
 }
 
 const MAX_ITEMS = 7;
 const MIN_QUERY = 2;
 
-const normalize = (value: string): string => value.toLowerCase().replace(/ё/g, 'е').trim();
+const normalize = (value: string): string => value
+  .toLowerCase()
+  .replace(/ё/g, 'е')
+  .replace(/[^\p{L}\p{N}]+/gu, ' ')
+  .trim();
 
 export function initSearch(): void {
   const form = document.querySelector<HTMLFormElement>('[data-search]');
@@ -77,14 +82,16 @@ export function initSearch(): void {
     }
 
     matches = items
-      .filter((item) => normalize(`${item.title} ${item.sub} ${item.type}`).includes(q))
+      .filter((item) => normalize(`${item.title} ${item.sub} ${item.type} ${(item.terms ?? []).join(' ')}`).includes(q)
+        || q.split(/\s+/).filter(Boolean).every((word) => normalize(`${item.title} ${item.sub} ${item.type} ${(item.terms ?? []).join(' ')}`).includes(word)))
       .slice(0, MAX_ITEMS);
 
     if (matches.length === 0) {
-      const empty = document.createElement('p');
+      const empty = document.createElement('div');
       empty.className = 'search-empty';
-      empty.textContent =
-        'Ничего не нашли. Попробуйте «ОГПО», «КАСКО», «квартира» или название компании.';
+      empty.setAttribute('role', 'option');
+      empty.setAttribute('aria-disabled', 'true');
+      empty.textContent = 'В быстрых подсказках совпадений нет. Нажмите Enter, чтобы искать по описаниям и условиям.';
       panel.append(empty);
       panel.dataset.open = 'true';
       input.setAttribute('aria-expanded', 'true');

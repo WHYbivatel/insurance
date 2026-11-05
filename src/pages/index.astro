@@ -4,52 +4,15 @@ import Icon from '../components/Icon.astro';
 import Faq from '../components/Faq.astro';
 import SearchInput from '../components/ui/SearchInput.astro';
 import AudienceSwitch from '../components/ui/AudienceSwitch.astro';
-import CategoryCard from '../components/ui/CategoryCard.astro';
 import OfferCard from '../components/ui/OfferCard.astro';
 import Steps from '../components/ui/Steps.astro';
 import Reveal from '../components/ui/Reveal.astro';
 import Link from '../components/ui/Link.astro';
 import Button from '../components/ui/Button.astro';
 import { site } from '../data/site';
-import type { ObligationStatus } from '../data/types';
-import { categories, categoriesByAudience } from '../data/categories';
 import { companies } from '../data/companies';
-import { publishedOffers, featuredOffers, audienceCount, companyName } from '../data/products';
-
-const individualCats = categoriesByAudience('individual');
-const businessCats = categoriesByAudience('business');
-
-const searchItems = [
-  ...categories.map((c) => ({
-    title: c.title,
-    sub: c.audience === 'individual' ? 'Для себя' : 'Для бизнеса',
-    url: c.audience === 'individual' ? `/dlya-sebya/${c.slug}/` : `/dlya-biznesa/${c.slug}/`,
-    type: 'Раздел',
-  })),
-  ...companies.map((c) => ({
-    title: c.name,
-    sub: `Страховщик · ${c.city}`,
-    url: `/kompanii/${c.slug}/`,
-    type: 'Компания',
-  })),
-  ...publishedOffers.map((o) => ({
-    title: o.title,
-    sub: `${companyName(o.companyId)} · ${o.audience === 'individual' ? 'для себя' : 'для бизнеса'}`,
-    url: `/predlozhenie/${o.slug}/`,
-    type: 'Предложение',
-  })),
-];
-
-/* Обязательность раздела показываем только если она одинакова у всех его
-   предложений: категория не задаёт статус конкретного продукта. */
-const statusesFor = (categoryId: string): ObligationStatus[] =>
-  Array.from(
-    new Set(
-      publishedOffers.filter((o) => o.categoryId === categoryId).map((o) => o.obligation.status)
-    )
-  );
-const countFor = (categoryId: string): number =>
-  publishedOffers.filter((o) => o.categoryId === categoryId).length;
+import { publishedOffers, featuredOffers, audienceCount } from '../data/products';
+import { searchSuggestions } from '../data/search-index';
 
 const tasksIndividual = [
   { label: 'Мне нужна обязательная страховка на машину', href: '/dlya-sebya/ogpo/' },
@@ -74,7 +37,7 @@ const homeFaq = [
   },
   {
     q: 'Можно ли оформить полис прямо на сайте?',
-    a: 'Оформление происходит у страховщика: на его сайте, по телефону или в отделении. Мы не собираем ИИН, документы и данные автомобиля — это не нужно для подбора.',
+    a: 'Оформление происходит у страховщика или на указанной партнёрской площадке. Способ зависит от продукта. Мы не собираем ИИН, документы и данные автомобиля — это не нужно для подбора.',
   },
   {
     q: 'Откуда берутся данные о продуктах?',
@@ -109,10 +72,15 @@ const steps = [
   },
 ];
 
-const dateLabel = new Date(site.updatedAt).toLocaleDateString('ru-RU', {
+const latestSourceDate = publishedOffers.reduce(
+  (latest, offer) => offer.checkedAt > latest ? offer.checkedAt : latest,
+  '1970-01-01',
+);
+const dateLabel = new Date(`${latestSourceDate}T00:00:00.000Z`).toLocaleDateString('ru-RU', {
   day: 'numeric',
   month: 'long',
   year: 'numeric',
+  timeZone: 'UTC',
 });
 ---
 
@@ -147,7 +115,7 @@ const dateLabel = new Date(site.updatedAt).toLocaleDateString('ru-RU', {
 
         <div class="hero__search">
           <SearchInput
-            items={searchItems}
+            items={searchSuggestions}
             id="hero-search"
             placeholder="ОГПО, КАСКО, квартира, ДМС или компания"
           />
@@ -242,30 +210,6 @@ const dateLabel = new Date(site.updatedAt).toLocaleDateString('ru-RU', {
     </div>
   </Reveal>
 
-  <Reveal as="section" class="section section--surface">
-    <div class="container">
-      <div class="section-head">
-        <div>
-          <span class="eyebrow">Для себя</span>
-          <h2>Основные виды страхования</h2>
-          <p>Автомобиль, жильё, здоровье, поездки и долгосрочные программы. В каждом разделе — объяснение, отличия и предложения компаний.</p>
-        </div>
-        <Link href="/dlya-sebya/" variant="arrow">Весь каталог</Link>
-      </div>
-
-      <div class="grid grid--4">
-        {individualCats.map((cat) => (
-          <CategoryCard
-            category={cat}
-            count={countFor(cat.id)}
-            statuses={statusesFor(cat.id)}
-            href={`/dlya-sebya/${cat.slug}/`}
-          />
-        ))}
-      </div>
-    </div>
-  </Reveal>
-
   <Reveal as="section" class="section">
     <div class="container">
       <div class="section-head">
@@ -284,29 +228,17 @@ const dateLabel = new Date(site.updatedAt).toLocaleDateString('ru-RU', {
     </div>
   </Reveal>
 
-  <Reveal as="section" class="section section--surface">
+  <Reveal as="section" class="section">
     <div class="container">
       <div class="section-head">
         <div>
           <span class="eyebrow">Для бизнеса</span>
-          <h2>Что страхуют компании</h2>
-          <p>Работники, автопарк, имущество, грузы, стройка, ответственность и специальные риски. Обязательность зависит от деятельности.</p>
+          <h2>Предложения для компаний</h2>
+          <p>Подборка корпоративных программ. Полный список направлений и фильтры собраны в каталоге для бизнеса.</p>
         </div>
-        <Link href="/dlya-biznesa/" variant="arrow">Весь каталог</Link>
+        <Link href="/dlya-biznesa/" variant="arrow">Открыть каталог бизнеса</Link>
       </div>
-
-      <div class="grid grid--4">
-        {businessCats.map((cat) => (
-          <CategoryCard
-            category={cat}
-            count={countFor(cat.id)}
-            statuses={statusesFor(cat.id)}
-            href={`/dlya-biznesa/${cat.slug}/`}
-          />
-        ))}
-      </div>
-
-      <div class="grid grid--3" style="margin-top:24px">
+      <div class="grid grid--3">
         {featuredOffers('business', 3).map((offer) => <OfferCard offer={offer} />)}
       </div>
     </div>

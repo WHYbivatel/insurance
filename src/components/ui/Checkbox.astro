@@ -29,5 +29,5 @@ const { name, value, label, count, checked = false, filter, company } = Astro.pr
   />
   {company && <CompanyLogo company={company} variant="compact" class="check__logo" />}
   <span>{label}</span>
-  {typeof count === 'number' && <em>{count}</em>}
+  {typeof count === 'number' && <em data-filter-count data-filter={filter} data-value={value}>{count}</em>}
 </label>

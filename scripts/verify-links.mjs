@@ -133,7 +133,7 @@ async function runPool(items, worker, limit) {
 }
 
 /* ------------------------------------------------------------------ */
-/* Внутренние ссылки: читаем dist/ и проверяем, что адрес существует.  */
+/* Внутренние ссылки: проверяем маршрут и фрагментный ID в dist/.          */
 /* ------------------------------------------------------------------ */
 
 async function listHtml(dir) {
@@ -150,7 +150,7 @@ async function listHtml(dir) {
 function resolveTarget(dist, pathname) {
   const clean = decodeURIComponent(pathname.split('#')[0].split('?')[0]);
   const rel = clean.replace(/^\/+/, '');
-  if (rel === '') return path.join(dist, 'index.html');
+  if (rel === '') return [path.join(dist, 'index.html')];
   const candidates = rel.endsWith('/')
     ? [path.join(dist, rel, 'index.html')]
     : [path.join(dist, rel), path.join(dist, rel, 'index.html'), path.join(dist, `${rel}.html`)];
@@ -173,32 +173,56 @@ async function checkInternalLinks() {
   }
 
   const broken = new Map(); // href -> Set(страница, где встретился)
+  const htmlByFile = new Map();
+  const idsByFile = new Map();
 
   for (const page of pages) {
     const html = await readFile(page, 'utf8');
+    htmlByFile.set(page, html);
+    idsByFile.set(page, new Set([...html.matchAll(/\bid="([^"]+)"/g)].map((match) => match[1])));
+  }
+
+  for (const page of pages) {
+    const html = htmlByFile.get(page);
     for (const match of html.matchAll(/href="([^"]+)"/g)) {
       const href = match[1];
-      if (!href.startsWith('/') || href.startsWith('//')) continue;
+      if ((!href.startsWith('/') && !href.startsWith('#')) || href.startsWith('//')) continue;
       if (href.startsWith('/_astro/') || /\.(css|js|svg|png|jpe?g|webp|ico|woff2?|xml|txt)$/.test(href)) {
         continue;
       }
 
-      const candidates = resolveTarget(dist, href);
-      let exists = false;
+      const sourcePath = `/${path.relative(dist, page).replace(/index\.html$/, '')}`;
+      const url = new URL(href, `https://internal.invalid${sourcePath}`);
+      const candidates = resolveTarget(dist, `${url.pathname}${url.search}${url.hash}`);
+      let targetFile = null;
       for (const candidate of candidates) {
         try {
           await stat(candidate);
-          exists = true;
+          targetFile = candidate;
           break;
         } catch {
           /* пробуем следующий вариант */
         }
       }
 
-      if (!exists) {
-        const from = `/${path.relative(dist, page).replace(/index\.html$/, '')}`;
+      const from = sourcePath;
+      if (!targetFile) {
         if (!broken.has(href)) broken.set(href, new Set());
         broken.get(href).add(from || '/');
+        continue;
+      }
+
+      if (url.hash) {
+        let id;
+        try {
+          id = decodeURIComponent(url.hash.slice(1));
+        } catch {
+          id = url.hash.slice(1);
+        }
+        if (id && !idsByFile.get(targetFile)?.has(id)) {
+          if (!broken.has(href)) broken.set(href, new Set());
+          broken.get(href).add(from || '/');
+        }
       }
     }
   }

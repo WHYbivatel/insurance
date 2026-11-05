@@ -3,16 +3,14 @@ import Base from '../layouts/Base.astro';
 import Breadcrumbs from '../components/ui/Breadcrumbs.astro';
 import Icon from '../components/Icon.astro';
 import Faq from '../components/Faq.astro';
-import { site } from '../data/site';
+import { sourceDateRangeLabel } from '../data/source-dates';
 import { companies } from '../data/companies';
 import { publishedOffers } from '../data/products';
 import { categories } from '../data/categories';
 
-const dateLabel = new Date(site.updatedAt).toLocaleDateString('ru-RU', {
-  day: 'numeric',
-  month: 'long',
-  year: 'numeric',
-});
+const feedbackTitle = encodeURIComponent('[Каталог] Сообщение');
+const feedbackBody = encodeURIComponent(`Тип сообщения:\nПродукт или раздел каталога:\nОфициальный источник страховщика:\nЧто следует проверить:\n\nВажно: сообщение публичное. Не указывайте ИИН, паспортные данные, телефон, госномер, номер полиса, платёжные сведения и не прикладывайте документы.`);
+const feedbackUrl = `https://github.com/WHYbivatel/insurance/issues/new?title=${feedbackTitle}&body=${feedbackBody}`;
 
 const faq = [
   {
@@ -25,7 +23,7 @@ const faq = [
   },
   {
     q: 'Как сообщить об ошибке или устаревшей ссылке?',
-    a: 'Напишите в Issues репозитория проекта на GitHub — ссылка указана ниже. Укажите продукт и что именно изменилось; мы проверим источник и обновим данные.',
+    a: 'Откройте подготовленный черновик сообщения в GitHub, укажите продукт, суть изменения и ссылку на официальный источник. Перед публикацией изменения мы проверим сведения по источнику страховщика. Сообщение будет публичным; не добавляйте личные данные и документы.',
   },
 ];
 ---
@@ -43,7 +41,7 @@ const faq = [
       <p class="page-head__lead">
         «Полис» помогает разобраться в страховании в Казахстане и найти предложение под свою
         ситуацию. Мы объясняем условия простым языком и ведём к оформлению на официальном
-        сайте страховой компании.
+        сайте страховой компании или указанной партнёрской площадке.
       </p>
     </div>
 
@@ -94,16 +92,25 @@ const faq = [
         <li>Стоимость, лимиты и правила могут измениться после даты проверки.</li>
       </ul>
 
-      <h2 id="contacts">Связаться</h2>
+      <h2 id="contacts">Сообщить об ошибке или предложить источник</h2>
       <p>
-        Проект открыт: исходный код, данные каталога и история изменений доступны в репозитории.
-        Сообщения об ошибках и устаревших ссылках — через Issues.
+        Отправьте сообщение о неверном условии, неработающей ссылке или предложении, которое
+        можно подтвердить официальным источником страховщика. Укажите название продукта и адрес
+        страницы каталога; для изменения условий добавьте ссылку на первоисточник.
       </p>
       <p>
-        <a class="btn btn--primary" href="https://github.com/WHYbivatel/insurance" target="_blank" rel="noopener noreferrer">
-          Репозиторий проекта
+        <a class="btn btn--primary" href={feedbackUrl} target="_blank" rel="noopener noreferrer">
+          Сообщить о каталоге
           <Icon name="external" size={15} />
         </a>
+        <a class="btn btn--secondary" href="https://github.com/WHYbivatel/insurance" target="_blank" rel="noopener noreferrer">
+          Исходный код проекта
+          <Icon name="external" size={15} />
+        </a>
+      </p>
+      <p class="small muted">
+        Для отправки нужен аккаунт GitHub. Сообщение будет публичным. Не указывайте ИИН, паспортные данные,
+        телефон, госномер, номер полиса, платёжные сведения и не прикладывайте документы.
       </p>
 
       <h2>Каталог в цифрах</h2>
@@ -121,7 +128,7 @@ const faq = [
           <p class="stat__label">разделов каталога</p>
         </div>
       </div>
-      <p class="small muted">Дата последней проверки каталога: {dateLabel}.</p>
+      <p class="small muted">Даты проверки источников: {sourceDateRangeLabel}. Дата каждого предложения указана на его странице.</p>
     </div>
   </div>
 

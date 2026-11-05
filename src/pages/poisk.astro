@@ -3,35 +3,9 @@ import Base from '../layouts/Base.astro';
 import Breadcrumbs from '../components/ui/Breadcrumbs.astro';
 import EmptyState from '../components/ui/EmptyState.astro';
 import Icon from '../components/Icon.astro';
-import { categories } from '../data/categories';
-import { companies } from '../data/companies';
-import { publishedOffers, companyName, categoryTitle } from '../data/products';
+import { searchIndex } from '../data/search-index';
 
-const items = [
-  ...categories.map((c) => ({
-    title: c.title,
-    sub: c.audience === 'individual' ? 'Для себя' : 'Для бизнеса',
-    url: c.audience === 'individual' ? `/dlya-sebya/${c.slug}/` : `/dlya-biznesa/${c.slug}/`,
-    type: 'Раздел',
-    text: `${c.short} ${c.lead}`,
-  })),
-  ...companies.map((c) => ({
-    title: c.name,
-    sub: `Страховщик · ${c.city}`,
-    url: `/kompanii/${c.slug}/`,
-    type: 'Компания',
-    text: c.summary,
-  })),
-  ...publishedOffers.map((o) => ({
-    title: o.title,
-    sub: `${companyName(o.companyId)} · ${categoryTitle(o.categoryId)}`,
-    url: `/predlozhenie/${o.slug}/`,
-    type: 'Предложение',
-    text: `${o.tagline} ${o.description} ${o.coverage.join(' ')}`,
-  })),
-];
-
-const json = JSON.stringify(items).replace(/</g, '\\u003c');
+const json = JSON.stringify(searchIndex).replace(/</g, '\\u003c');
 
 const popular = [
   { label: 'ОГПО', href: '/poisk/?q=ОГПО' },
@@ -68,12 +42,15 @@ const popular = [
         name="q"
         placeholder="Например: ОГПО или Евразия"
         autocomplete="off"
+        aria-controls="global-results"
+        aria-describedby="search-help"
         data-global-input
       />
       <button class="search__submit" type="submit">Найти</button>
     </form>
 
-    <p class="catalog__count search__counter" data-global-count aria-live="polite" hidden></p>
+    <p class="catalog__count search__counter" data-global-count role="status" aria-live="polite" hidden></p>
+    <p id="search-help" class="tiny">Tab перемещает фокус по ссылкам результатов. На главной стрелки выбирают подсказку, Enter открывает её или запускает полный поиск.</p>
 
     <div class="search-hint" data-global-hint>
       <h2 class="search-hint__title">С чего начать</h2>
@@ -83,7 +60,7 @@ const popular = [
       </div>
     </div>
 
-    <div data-global-results aria-live="polite"></div>
+    <div id="global-results" data-global-results aria-live="off"></div>
 
     <div data-global-empty hidden>
       <EmptyState

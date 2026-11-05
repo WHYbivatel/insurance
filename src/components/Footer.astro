@@ -1,5 +1,6 @@
 ---
 import { site } from '../data/site';
+import { sourceDateRangeLabel } from '../data/source-dates';
 import { categoriesByAudience } from '../data/categories';
 import VersionIndicator from './ui/VersionIndicator.astro';
 
@@ -26,7 +27,7 @@ const business = categoriesByAudience('business').slice(0, 4);
         </a>
         <p>
           Независимый каталог страхования: объясняем виды страхования, показываем предложения
-          страховых компаний и ведём к оформлению на официальном сайте страховщика.
+          страховых компаний и даём ссылки на оформление у страховщиков и на партнёрских площадках.
         </p>
       </div>
 
@@ -65,7 +66,7 @@ const business = categoriesByAudience('business').slice(0, 4);
         заключает договоры страхования. Оформление, оплата и урегулирование — у страховой компании.
         Итоговые условия определяет договор страховщика.
       </p>
-      <p>Данные каталога проверены {new Date(site.updatedAt).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+      <p>Даты проверки источников: {sourceDateRangeLabel}</p>
       <VersionIndicator />
     </div>
   </div>

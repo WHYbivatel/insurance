@@ -9,6 +9,7 @@ import Base from '../layouts/Base.astro';
 import Breadcrumbs from './ui/Breadcrumbs.astro';
 import CategoryCard from './ui/CategoryCard.astro';
 import CatalogBrowser from './CatalogBrowser.astro';
+import Button from './ui/Button.astro';
 import Faq from './Faq.astro';
 import Reveal from './ui/Reveal.astro';
 import { categoriesByAudience } from '../data/categories';
@@ -78,14 +79,18 @@ const companiesCount = new Set(offers.map((o) => o.companyId)).size;
       <span class="eyebrow">{eyebrow}</span>
       <h1 class="page-head__title">{heading}</h1>
       <p class="page-head__lead">{lead}</p>
-      <div class="meta-row" style="margin-top:16px">
-        <span class="chip chip--brand">{offers.length} проверенных {plural(offers.length)}</span>
+      <div class="meta-row audience-page__meta">
+        <span class="chip chip--brand">{offers.length} {plural(offers.length)} в каталоге</span>
         <span class="chip">{companiesCount} страховщиков</span>
         <a class="chip chip--outline" href={crossLink.href}>{crossLink.label}</a>
       </div>
+      <div class="audience-page__actions">
+        <Button href="#all-title" variant="primary" size="lg">Перейти ко всем предложениям</Button>
+        <span>Или выберите направление ниже</span>
+      </div>
     </div>
 
-    <section aria-labelledby="cats-title" style="padding-bottom:34px">
+    <section class="audience-page__categories" aria-labelledby="cats-title">
       <h2 id="cats-title" class="sr-only">Разделы страхования: {audienceLabel.toLowerCase()}</h2>
       <div class="grid grid--4">
         {cats.map((cat) => (

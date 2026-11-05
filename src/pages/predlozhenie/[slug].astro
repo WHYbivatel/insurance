@@ -7,11 +7,13 @@ import CompanyLogo from '../../components/ui/CompanyLogo.astro';
 import OfferCard from '../../components/ui/OfferCard.astro';
 import Steps from '../../components/ui/Steps.astro';
 import Icon from '../../components/Icon.astro';
+import ProductConditions from '../../components/ProductConditions.astro';
 import { publishedOffers } from '../../data/products';
 import { companyById } from '../../data/companies';
 import { categoryById } from '../../data/categories';
 import { purchaseLabels, obligationTone, type ObligationStatus } from '../../data/types';
 import { site } from '../../data/site';
+import { externalHost } from '../../lib/external-link';
 
 export function getStaticPaths() {
   return publishedOffers.map((offer) => ({ params: { slug: offer.slug }, props: { offer } }));
@@ -23,12 +25,15 @@ const category = categoryById(offer.categoryId);
 if (!company || !category) throw new Error(`Некорректные связи продукта ${offer.slug}`);
 
 const basePath = offer.audience === 'individual' ? '/dlya-sebya' : '/dlya-biznesa';
+const absoluteUrl = (path: string) => new URL(path, site.url).href;
 const audienceLabel = offer.audience === 'individual' ? 'Для себя' : 'Для бизнеса';
-const host = new URL(offer.purchase.url).host.replace(/^www\./, '');
+const host = externalHost(offer.purchase.url);
+const sourceHost = externalHost(offer.source.url);
 const dateLabel = new Date(offer.checkedAt).toLocaleDateString('ru-RU', {
   day: 'numeric',
   month: 'long',
   year: 'numeric',
+  timeZone: 'UTC',
 });
 
 /* Обязательность берётся у предложения: внутри одной категории
@@ -45,39 +50,55 @@ const related = publishedOffers
   .filter((o) => o.categoryId === offer.categoryId && o.audience === offer.audience && o.slug !== offer.slug)
   .slice(0, 3);
 
-const steps = [
-  {
-    title: 'Перейдите на сайт',
-    text: `Кнопка ведёт на ${host} — официальную страницу страховщика.`,
-  },
-  {
-    title: 'Заполните данные',
-    text: 'Данные для расчёта и договора вы вводите напрямую страховщику.',
-  },
-  {
-    title: 'Оплатите и получите полис',
-    text: 'Оплата и выдача документа происходят у страховой компании.',
-  },
-];
+const stepsByMethod = {
+  online: [
+    { title: 'Откройте страницу продукта', text: `Кнопка ведёт на ${host}. Проверьте, что выбраны нужная программа и страхователь.` },
+    { title: 'Заполните данные', text: 'Данные для расчёта и договора вводятся на странице оформления.' },
+    { title: 'Проверьте условия и оформите', text: 'Перед оплатой проверьте покрытие, исключения и срок действия полиса.' },
+  ],
+  request: [
+    { title: 'Откройте страницу страховщика', text: `Кнопка ведёт на ${host}, где можно отправить запрос или оставить заявку.` },
+    { title: 'Уточните параметры и документы', text: 'Представитель страховщика сообщит, какие сведения нужны для расчёта.' },
+    { title: 'Сравните предложение перед оформлением', text: 'Проверьте цену, покрытие и исключения в расчёте и проекте договора.' },
+  ],
+  office: [
+    { title: 'Свяжитесь с отделением', text: `Уточните у страховщика адрес, график и возможность оформить продукт в ${host}.` },
+    { title: 'Подготовьте документы', text: 'Список документов и требования к ним заранее подтвердите у страховщика.' },
+    { title: 'Проверьте договор в отделении', text: 'До подписания сверьте условия, срок действия и итоговую стоимость.' },
+  ],
+  partner: [
+    { title: 'Перейдите на сайт-партнёр', text: `Оформление открывается на ${host}; это партнёрская площадка, а не сайт страховщика.` },
+    { title: 'Проверьте данные и условия', text: 'Уточните, какой страховщик указан в полисе, и прочитайте условия до оплаты.' },
+    { title: 'Завершите оформление на площадке', text: 'Порядок оплаты и получения полиса зависит от правил сайта-партнёра.' },
+  ],
+} satisfies Record<typeof offer.purchase.method, { title: string; text: string }[]>;
+
+const steps = stepsByMethod[offer.purchase.method];
+const destinationLabel = offer.purchase.method === 'partner'
+  ? 'Оформление открывается на партнёрском сайте:'
+  : offer.purchase.method === 'office'
+    ? 'Информация об оформлении у страховщика:'
+    : 'Страница оформления у страховщика:';
 
 const schema = [
   {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Главная', item: '/' },
-      { '@type': 'ListItem', position: 2, name: audienceLabel, item: `${basePath}/` },
-      { '@type': 'ListItem', position: 3, name: category.navTitle, item: `${basePath}/${category.slug}/` },
-      { '@type': 'ListItem', position: 4, name: offer.title, item: `/predlozhenie/${offer.slug}/` },
+      { '@type': 'ListItem', position: 1, name: 'Главная', item: absoluteUrl('/') },
+      { '@type': 'ListItem', position: 2, name: audienceLabel, item: absoluteUrl(`${basePath}/`) },
+      { '@type': 'ListItem', position: 3, name: category.navTitle, item: absoluteUrl(`${basePath}/${category.slug}/`) },
+      { '@type': 'ListItem', position: 4, name: offer.title, item: absoluteUrl(`/predlozhenie/${offer.slug}/`) },
     ],
   },
   {
     '@context': 'https://schema.org',
     '@type': 'WebPage',
     name: `${offer.title} — ${company.name}`,
+    url: absoluteUrl(`/predlozhenie/${offer.slug}/`),
     description: offer.tagline,
     inLanguage: 'ru-KZ',
-    dateModified: offer.checkedAt,
+    ...(offer.editorial?.contentModifiedAt ? { dateModified: offer.editorial.contentModifiedAt } : {}),
     isPartOf: { '@type': 'WebSite', name: site.name, url: site.url },
   },
 ];
@@ -119,6 +140,42 @@ const schema = [
       </div>
     </header>
 
+    <section class="offer-summary" aria-labelledby="offer-summary-title">
+      <div class="offer-summary__top">
+        <div>
+          <span class="eyebrow">Кратко о предложении</span>
+          <h2 id="offer-summary-title">Основные условия</h2>
+        </div>
+        <span class="chip chip--outline">Источник проверен {dateLabel}</span>
+      </div>
+      <dl class="offer-summary__facts">
+        <div>
+          <dt>Покрытие</dt>
+          <dd>{offer.coverage.slice(0, 2).join(' · ')}</dd>
+        </div>
+        <div>
+          <dt>Стоимость</dt>
+          <dd>{offer.price.text}</dd>
+        </div>
+        <div>
+          <dt>Обязательность</dt>
+          <dd>{obligation.label}</dd>
+        </div>
+        <div>
+          <dt>Оформление</dt>
+          <dd>{purchaseLabels[offer.purchase.method]}</dd>
+        </div>
+      </dl>
+      <nav class="offer-summary__nav" aria-label="Перейти к подробным условиям">
+        <a href="#coverage-title">Покрытие</a>
+        {offer.conditions && <a href="#structured-conditions-title">Ключевые параметры</a>}
+        <a href="#limits-title">Лимиты и условия</a>
+        <a href="#exclusions-title">Исключения</a>
+        <a href="#docs-title">Документы</a>
+        <a href="#how-title">Как оформить</a>
+      </nav>
+    </section>
+
     <div class="offer-layout">
       <div class="offer-body">
         <section class="offer-section" aria-labelledby="about-title">
@@ -132,6 +189,22 @@ const schema = [
             {offer.coverage.map((item) => <li>{item}</li>)}
           </ul>
         </section>
+
+        {offer.features && offer.features.length > 0 && (
+          <section class="offer-section" aria-labelledby="features-title">
+            <h2 id="features-title">Дополнительные особенности</h2>
+            <p class="small muted" style="margin-bottom:12px">
+              Сервис, оформление и другие свойства продукта. Эти пункты не означают, что указанный риск входит в страховое покрытие.
+            </p>
+            <ul class="bullet-list">
+              {offer.features.map((item) => <li>{item}</li>)}
+            </ul>
+          </section>
+        )}
+
+        {offer.conditions && (
+          <ProductConditions conditions={offer.conditions} source={offer.source} checkedAt={offer.checkedAt} />
+        )}
 
         <section class="offer-section" aria-labelledby="limits-title">
           <h2 id="limits-title">Лимиты и важные условия</h2>
@@ -187,7 +260,13 @@ const schema = [
         <div class="source-box">
           <span>
             Источник:{' '}
-            <a class="link-arrow" href={offer.source.url} target="_blank" rel="noopener noreferrer nofollow">
+            <a
+              class="link-arrow"
+              href={offer.source.url}
+              target="_blank"
+              rel="noopener noreferrer nofollow"
+              aria-label={`${offer.source.label}; откроется на ${sourceHost} в новой вкладке`}
+            >
               {offer.source.label}
               <Icon name="arrow-up-right" size={14} />
             </a>
@@ -222,12 +301,13 @@ const schema = [
             block
             external
             iconRight="external"
+            aria-label={`${offer.purchase.ctaLabel} — ${host} (откроется в новой вкладке)`}
           >
             {offer.purchase.ctaLabel}
           </Button>
           <p class="offer-cta__domain">
             <Icon name="info" size={14} />
-            <span>Оформление и оплата — на сайте страховщика: <strong>{host}</strong></span>
+            <span>{destinationLabel} <strong>{host}</strong></span>
           </p>
           <p class="tiny" style="margin-top:8px">{offer.purchase.label}</p>
         </div>
