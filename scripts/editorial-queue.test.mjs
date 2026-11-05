@@ -27,4 +27,11 @@ test('не обновляет даты автоматически и включ�
   assert.equal(queue[0].nextReviewAt, '');
   assert.ok(queue[0].reasons.some((reason) => reason.includes('Нет корректного срока')));
   assert.ok(queue[0].reasons.some((reason) => reason.includes('внутренняя редакционная заметка')));
+  assert.equal(queue[0].internalNote, 'Проверить первоисточник');
+});
+
+test('несуществующая календарная дата отклоняется, високосный день принимается', () => {
+  assert.throws(() => buildEditorialQueue([], '2026-02-31'), /Некорректная дата/);
+  assert.throws(() => buildEditorialQueue([], '2026-02-29'), /Некорректная дата/);
+  assert.deepEqual(buildEditorialQueue([], '2028-02-29'), []);
 });

@@ -4,10 +4,17 @@ const { readFileSync } = require('node:fs');
 const ts = require('typescript');
 const DAY = 86_400_000;
 
+function validDate(value) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const date = new Date(`${value}T00:00:00.000Z`);
+  return Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === value;
+}
+
 function buildEditorialQueue(offers, today, windowDays = 30) {
+  if (!validDate(today)) throw new Error(`Некорректная дата --as-of: ${today}`);
   const todayMs = Date.parse(`${today}T00:00:00.000Z`);
   return offers.filter((offer) => offer.status === 'published').map((offer) => {
-    const next = offer.editorial?.nextReviewAt ?? '';
+    const next = validDate(offer.editorial?.nextReviewAt ?? '') ? offer.editorial.nextReviewAt : '';
     const daysUntilReview = next ? Math.ceil((Date.parse(`${next}T00:00:00.000Z`) - todayMs) / DAY) : null;
     const unknownConditions = [];
     if (offer.conditions) {
@@ -28,6 +35,7 @@ function buildEditorialQueue(offers, today, windowDays = 30) {
       id: offer.id, slug: offer.slug, title: offer.title, categoryId: offer.categoryId,
       source: offer.source, sourceCheckedAt: offer.checkedAt, nextReviewAt: next,
       daysUntilReview, unknownConditions, reasons,
+      internalNote: offer.editorial?.notes?.internal ?? null,
       technicalLinkStatus: 'not checked by this report',
       contentStatus: 'requires manual comparison with the current official source',
     };
@@ -66,7 +74,7 @@ function loadOffers() {
 function main() {
   const asOfArg = process.argv.find((arg) => arg.startsWith('--as-of='));
   const today = asOfArg?.slice('--as-of='.length) ?? new Date().toISOString().slice(0, 10);
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(today) || Number.isNaN(Date.parse(`${today}T00:00:00Z`))) {
+  if (!validDate(today)) {
     throw new Error(`Некорректная дата --as-of: ${today}`);
   }
   const queue = buildEditorialQueue(loadOffers(), today);
@@ -81,6 +89,7 @@ function main() {
     console.log(`- [${timing}] ${item.title} (${item.categoryId}; ${item.slug})`);
     console.log(`  Проверено: ${item.sourceCheckedAt}; далее: ${item.nextReviewAt || 'не задано'}`);
     for (const reason of item.reasons) console.log(`  Причина: ${reason}`);
+    if (item.internalNote) console.log(`  Заметка редактора: ${item.internalNote}`);
     if (item.unknownConditions.length) console.log(`  Неизвестно: ${item.unknownConditions.join(', ')}`);
     console.log(`  Источник: ${item.source?.url ?? 'НЕ УКАЗАН'}`);
   }
