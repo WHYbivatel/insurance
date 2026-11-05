@@ -53,6 +53,12 @@ jobs:
       - name: Проверить валидатор данных каталога
         run: npm run test:data
 
+      - name: Проверить редакционную очередь
+        run: npm run test:editorial-queue
+
+      - name: Сформировать очередь проверки источников
+        run: npm run editorial:queue
+
       - name: Собрать сайт
         run: npm run build
 

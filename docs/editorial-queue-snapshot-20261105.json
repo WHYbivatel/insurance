@@ -1,0 +1,267 @@
+{
+  "generatedAt": "2026-11-05",
+  "publishedOffers": 62,
+  "queue": [
+    {
+      "id": "auto-kasko-nomad-jur",
+      "slug": "auto-kasko-nomad-jur",
+      "title": "АвтоКАСКО для автопарка",
+      "categoryId": "avtopark",
+      "source": {
+        "label": "Nomad Insurance — КАСКО для юрлиц",
+        "url": "https://nomad.kz/yur_litsam/avtomobil/avtokasko/"
+      },
+      "sourceCheckedAt": "2026-11-05",
+      "nextReviewAt": "2027-02-03",
+      "daysUntilReview": 90,
+      "unknownConditions": [
+        "kasko.territory"
+      ],
+      "reasons": [
+        "Нужно проверить неизвестные условия (1)"
+      ],
+      "technicalLinkStatus": "not checked by this report",
+      "contentStatus": "requires manual comparison with the current official source"
+    },
+    {
+      "id": "kasko-nomad-transformer",
+      "slug": "kasko-nomad-transformer",
+      "title": "АВТОКАСКО Трансформер",
+      "categoryId": "kasko",
+      "source": {
+        "label": "Nomad Insurance — КАСКО",
+        "url": "https://nomad.kz/insurance/avtomobil/"
+      },
+      "sourceCheckedAt": "2026-11-05",
+      "nextReviewAt": "2027-02-03",
+      "daysUntilReview": 90,
+      "unknownConditions": [
+        "kasko.amountLimit",
+        "kasko.deductible",
+        "kasko.vehicleAge",
+        "kasko.territory"
+      ],
+      "reasons": [
+        "Нужно проверить неизвестные условия (4)"
+      ],
+      "technicalLinkStatus": "not checked by this report",
+      "contentStatus": "requires manual comparison with the current official source"
+    },
+    {
+      "id": "kasko-amanat",
+      "slug": "kasko-amanat",
+      "title": "КАСКО",
+      "categoryId": "kasko",
+      "source": {
+        "label": "Amanat — КАСКО",
+        "url": "https://amanat24.kz/kasko"
+      },
+      "sourceCheckedAt": "2026-11-05",
+      "nextReviewAt": "2027-02-03",
+      "daysUntilReview": 90,
+      "unknownConditions": [
+        "kasko.amountLimit",
+        "kasko.deductible",
+        "kasko.vehicleAge",
+        "kasko.territory"
+      ],
+      "reasons": [
+        "Нужно проверить неизвестные условия (4)"
+      ],
+      "technicalLinkStatus": "not checked by this report",
+      "contentStatus": "requires manual comparison with the current official source"
+    },
+    {
+      "id": "kasko-centras",
+      "slug": "kasko-centras",
+      "title": "КАСКО",
+      "categoryId": "kasko",
+      "source": {
+        "label": "Centras Insurance — КАСКО",
+        "url": "https://cic.kz/kaskoMain"
+      },
+      "sourceCheckedAt": "2026-11-05",
+      "nextReviewAt": "2027-02-03",
+      "daysUntilReview": 90,
+      "unknownConditions": [
+        "kasko.amountLimit",
+        "kasko.deductible",
+        "kasko.vehicleAge",
+        "kasko.territory"
+      ],
+      "reasons": [
+        "Нужно проверить неизвестные условия (4)"
+      ],
+      "technicalLinkStatus": "not checked by this report",
+      "contentStatus": "requires manual comparison with the current official source"
+    },
+    {
+      "id": "mini-kasko-centras",
+      "slug": "mini-kasko-centras",
+      "title": "Мини КАСКО",
+      "categoryId": "kasko",
+      "source": {
+        "label": "Centras Insurance — автострахование",
+        "url": "https://cic.kz/autoIndivid"
+      },
+      "sourceCheckedAt": "2026-11-05",
+      "nextReviewAt": "2027-02-03",
+      "daysUntilReview": 90,
+      "unknownConditions": [
+        "kasko.deductible",
+        "kasko.vehicleAge",
+        "kasko.territory"
+      ],
+      "reasons": [
+        "Нужно проверить неизвестные условия (3)"
+      ],
+      "technicalLinkStatus": "not checked by this report",
+      "contentStatus": "requires manual comparison with the current official source"
+    },
+    {
+      "id": "travel-eurasia",
+      "slug": "travel-eurasia",
+      "title": "Для путешественников",
+      "categoryId": "poezdki",
+      "source": {
+        "label": "Евразия — для путешественников",
+        "url": "https://theeurasia.kz/individuals/for-travelers/"
+      },
+      "sourceCheckedAt": "2026-11-05",
+      "nextReviewAt": "2027-02-03",
+      "daysUntilReview": 90,
+      "unknownConditions": [
+        "travel.medicalLimit",
+        "travel.tripDuration",
+        "travel.deductible",
+        "travel.territory",
+        "travel.covidCoverage"
+      ],
+      "reasons": [
+        "Нужно проверить неизвестные условия (5)"
+      ],
+      "technicalLinkStatus": "not checked by this report",
+      "contentStatus": "requires manual comparison with the current official source"
+    },
+    {
+      "id": "travel-amanat",
+      "slug": "travel-amanat",
+      "title": "Медицинская страховка туристов",
+      "categoryId": "poezdki",
+      "source": {
+        "label": "Amanat — туризм",
+        "url": "https://amanat24.kz/mst"
+      },
+      "sourceCheckedAt": "2026-11-05",
+      "nextReviewAt": "2027-02-03",
+      "daysUntilReview": 90,
+      "unknownConditions": [
+        "travel.ageLimit",
+        "travel.tripDuration",
+        "travel.deductible",
+        "travel.territory",
+        "travel.covidCoverage"
+      ],
+      "reasons": [
+        "Нужно проверить неизвестные условия (5)"
+      ],
+      "technicalLinkStatus": "not checked by this report",
+      "contentStatus": "requires manual comparison with the current official source"
+    },
+    {
+      "id": "travel-freedom",
+      "slug": "travel-freedom",
+      "title": "Медицинское страхование туриста",
+      "categoryId": "poezdki",
+      "source": {
+        "label": "Freedom Insurance — МСТ",
+        "url": "https://ffins.kz/ru/pages/mst"
+      },
+      "sourceCheckedAt": "2026-11-05",
+      "nextReviewAt": "2027-02-03",
+      "daysUntilReview": 90,
+      "unknownConditions": [
+        "travel.medicalLimit",
+        "travel.ageLimit",
+        "travel.deductible"
+      ],
+      "reasons": [
+        "Нужно проверить неизвестные условия (3)"
+      ],
+      "technicalLinkStatus": "not checked by this report",
+      "contentStatus": "requires manual comparison with the current official source"
+    },
+    {
+      "id": "travel-nomad-premium",
+      "slug": "travel-nomad-premium",
+      "title": "Медицинское страхование туристов — MCT Premium",
+      "categoryId": "poezdki",
+      "source": {
+        "label": "Nomad Insurance — путешествия",
+        "url": "https://nomad.kz/insurance/puteshestya/"
+      },
+      "sourceCheckedAt": "2026-11-05",
+      "nextReviewAt": "2027-02-03",
+      "daysUntilReview": 90,
+      "unknownConditions": [
+        "travel.ageLimit",
+        "travel.deductible",
+        "travel.territory",
+        "travel.covidCoverage"
+      ],
+      "reasons": [
+        "Нужно проверить неизвестные условия (4)"
+      ],
+      "technicalLinkStatus": "not checked by this report",
+      "contentStatus": "requires manual comparison with the current official source"
+    },
+    {
+      "id": "travel-nomad-standard",
+      "slug": "travel-nomad-standard",
+      "title": "Медицинское страхование туристов — MCT Standard",
+      "categoryId": "poezdki",
+      "source": {
+        "label": "Nomad Insurance — путешествия",
+        "url": "https://nomad.kz/insurance/puteshestya/"
+      },
+      "sourceCheckedAt": "2026-11-05",
+      "nextReviewAt": "2027-02-03",
+      "daysUntilReview": 90,
+      "unknownConditions": [
+        "travel.ageLimit",
+        "travel.deductible",
+        "travel.territory",
+        "travel.covidCoverage"
+      ],
+      "reasons": [
+        "Нужно проверить неизвестные условия (4)"
+      ],
+      "technicalLinkStatus": "not checked by this report",
+      "contentStatus": "requires manual comparison with the current official source"
+    },
+    {
+      "id": "travel-halyk-life-doroga",
+      "slug": "travel-halyk-life-doroga",
+      "title": "Life-Дорога",
+      "categoryId": "poezdki",
+      "source": {
+        "label": "Halyk Life — Life-Дорога",
+        "url": "https://halyklife.kz/ru/journey/life-doroga/"
+      },
+      "sourceCheckedAt": "2026-11-05",
+      "nextReviewAt": "2027-02-03",
+      "daysUntilReview": 90,
+      "unknownConditions": [
+        "travel.medicalLimit",
+        "travel.tripDuration",
+        "travel.deductible",
+        "travel.covidCoverage"
+      ],
+      "reasons": [
+        "Нужно проверить неизвестные условия (4)"
+      ],
+      "technicalLinkStatus": "not checked by this report",
+      "contentStatus": "requires manual comparison with the current official source"
+    }
+  ]
+}

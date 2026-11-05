@@ -11,6 +11,8 @@
     "preview": "astro preview",
     "check": "astro check",
     "test:data": "node --test scripts/data-validation.test.mjs",
+    "editorial:queue": "node scripts/editorial-queue.cjs",
+    "test:editorial-queue": "node --test scripts/editorial-queue.test.mjs",
     "verify:links": "node scripts/verify-links.mjs",
     "verify:internal": "node scripts/verify-links.mjs --internal",
     "verify:links:soft": "node scripts/verify-links.mjs --soft",
